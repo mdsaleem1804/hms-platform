@@ -1,0 +1,50 @@
+# HMS Platform - Gitignore
+
+# Dependencies
+**/node_modules/
+**/bin/
+**/obj/
+**/packages/
+
+# Environment
+.env
+.env.local
+.env.*.local
+appsettings.local.json
+
+# Build outputs
+dist/
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Docker
+.dockerignore
+
+# OS
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+postgres_data/
+
+# Misc
+.env.production.local
+.env.test.local

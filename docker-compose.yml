@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hms-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:5134
+      - NEXT_PUBLIC_APP_NAME=HMS Platform
+    depends_on:
+      - backend
+    networks:
+      - hms-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hms-backend
+    ports:
+      - "5134:5134"
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=hms_platform;Username=postgres;Password=postgres
+      - CORS__AllowedOrigins=http://localhost:3000,http://frontend:3000
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - hms-network
+    volumes:
+      - ./backend:/app
+
+  # Database Service (PostgreSQL)
+  database:
+    image: postgres:16-alpine
+    container_name: hms-database
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=hms_platform
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hms-network
+
+networks:
+  hms-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+
+# Notes:
+# - Frontend runs on http://localhost:3000
+# - Backend API runs on http://localhost:5134
+# - Database runs on localhost:5432
+# - All services communicate via 'hms-network'
+#
+# To run: docker-compose up --build
+# To stop: docker-compose down
+# To view logs: docker-compose logs -f [service_name]

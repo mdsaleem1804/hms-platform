@@ -1,0 +1,18 @@
+namespace HMS.API.Controllers;
+
+public class ApiResponse<T>
+{
+    public bool Success { get; set; }
+    public T? Data { get; set; }
+    public string Message { get; set; } = string.Empty;
+
+    public static ApiResponse<T> SuccessResponse(T data, string message = "Success")
+    {
+        return new ApiResponse<T> { Success = true, Data = data, Message = message };
+    }
+
+    public static ApiResponse<T> FailureResponse(string message)
+    {
+        return new ApiResponse<T> { Success = false, Data = default, Message = message };
+    }
+}

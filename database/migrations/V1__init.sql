@@ -1,0 +1,9 @@
+-- Migration: V1__initial_schema.sql
+-- This file documents the initial schema creation
+-- Use the individual schema files (patients.sql, doctors.sql, etc.) for reference
+-- Combined execution order:
+-- 1. patients.sql
+-- 2. doctors.sql
+-- 3. doctor_schedules.sql
+-- 4. appointments.sql
+-- 5. visits.sql
