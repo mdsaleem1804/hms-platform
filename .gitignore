@@ -48,3 +48,13 @@ postgres_data/
 # Misc
 .env.production.local
 .env.test.local
+
+
+# Visual Studio folder
+.vs/
+
+# Optional (extra safety)
+*.suo
+*.user
+*.userosscache
+*.sln.docstates

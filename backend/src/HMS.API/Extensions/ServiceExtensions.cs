@@ -1,4 +1,6 @@
-using HMS.API.Controllers;
+using HMS.Application.Features.Patients;
+using HMS.Application.Repositories;
+using HMS.Infrastructure.Repositories;
 using Serilog;
 
 namespace HMS.API.Extensions;
@@ -9,9 +11,10 @@ public static class ServiceExtensions
     {
         // Patient Services
         services.AddScoped<IPatientService, PatientService>();
+        services.AddScoped<IPatientRepository, PatientRepository>();
 
-        // Appointment Services
-        services.AddScoped<IAppointmentService, AppointmentService>();
+        // Future: Appointment Services
+        // services.AddScoped<IAppointmentService, AppointmentService>();
 
         return services;
     }

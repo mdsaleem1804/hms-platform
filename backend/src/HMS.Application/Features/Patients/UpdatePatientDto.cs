@@ -1,9 +1,8 @@
-namespace HMS.Domain.Entities;
+namespace HMS.Application.Features.Patients;
 
-public class Patient
+public class UpdatePatientDto
 {
     public long Id { get; set; }
-    public string Uhid { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;
     public DateTime Dob { get; set; }
     public string Gender { get; set; } = string.Empty;
@@ -15,12 +14,10 @@ public class Patient
     public string Photo { get; set; } = string.Empty;
     public string IdProofType { get; set; } = string.Empty;
     public string IdProofNumber { get; set; } = string.Empty;
-    public string Status { get; set; } = "ACTIVE";
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
-    public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
-    public ICollection<EmergencyContact> EmergencyContacts { get; set; } = new List<EmergencyContact>();
-    public ICollection<Attender> Attenders { get; set; } = new List<Attender>();
-    public ICollection<Referral> Referrals { get; set; } = new List<Referral>();
+    public string Status { get; set; } = string.Empty;
+    
+    // Nested objects
+    public EmergencyContactDto EmergencyContact { get; set; } = new();
+    public AttenderDto Attender { get; set; } = new();
+    public ReferralDto Referral { get; set; } = new();
 }

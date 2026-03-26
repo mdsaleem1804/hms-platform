@@ -1,4 +1,6 @@
 using HMS.API.Extensions;
+using HMS.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,12 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Hospital Management System - API Documentation"
     });
 });
+
+// DbContext Configuration
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString)
+);
 
 builder.Services.AddApiLogging();
 builder.Services.AddApplicationServices();

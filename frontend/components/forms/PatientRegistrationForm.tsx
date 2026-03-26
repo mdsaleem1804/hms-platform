@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 
 interface FormData {
-  first_name: string;
+  patient_name: string;
+  uhid: string;
   dob: string;
   age: string;
   gender: string;
@@ -18,6 +19,9 @@ interface FormData {
   address: string;
   postal_code: string;
   photo: string | null;
+  status: string;
+  id_proof_type: string;
+  id_proof_number: string;
   emergency_contact: {
     name: string;
     relationship: string;
@@ -74,7 +78,8 @@ interface Errors {
 
 const PatientRegistrationForm = () => {
   const [formData, setFormData] = useState<FormData>({
-    first_name: '',
+    patient_name: '',
+    uhid: '',
     dob: '',
     age: '',
     gender: '',
@@ -84,6 +89,9 @@ const PatientRegistrationForm = () => {
     address: '',
     postal_code: '',
     photo: null,
+    status: 'ACTIVE',
+    id_proof_type: '',
+    id_proof_number: '',
     emergency_contact: {
       name: '',
       relationship: '',
@@ -200,23 +208,51 @@ const PatientRegistrationForm = () => {
   const validate = (): boolean => {
     const newErrors: Errors = {};
 
-    if (!formData.first_name.trim()) {
-      newErrors.first_name = 'First name is required';
+    // Patient Name
+    if (!formData.patient_name.trim()) {
+      newErrors.patient_name = 'Patient name is required';
     }
+
+    // Date of Birth
     if (!formData.dob) {
       newErrors.dob = 'Date of birth is required';
+    } else {
+      const today = new Date();
+      const selectedDob = new Date(formData.dob);
+      if (selectedDob > today) {
+        newErrors.dob = 'Date of birth cannot be a future date';
+      }
     }
+
+    // Mobile Number
     if (!formData.mobile.trim()) {
       newErrors.mobile = 'Mobile number is required';
     } else if (!/^\d{10}$/.test(formData.mobile.replace(/\D/g, ''))) {
-      newErrors.mobile = 'Mobile number must be 10 digits';
+      newErrors.mobile = 'Mobile number must be exactly 10 digits';
+    } else {
+      // Prevent duplicate mobile (frontend check with sample data)
+      const existingMobiles = ['9876543210', '8765432109']; // Sample existing data
+      if (existingMobiles.includes(formData.mobile.replace(/\D/g, ''))) {
+        newErrors.mobile = 'This mobile number is already registered';
+      }
     }
+
+    // Email
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
+
+    // Postal Code
     if (formData.postal_code && !/^\d+$/.test(formData.postal_code)) {
       newErrors.postal_code = 'Postal code must be numeric';
     }
+
+    // ID Proof
+    if (formData.id_proof_type && !formData.id_proof_number.trim()) {
+      newErrors.id_proof_number = 'ID proof number is required';
+    }
+
+    // Attender ID Proof
     if (
       formData.attender.id_proof_type &&
       !formData.attender.id_proof_number.trim()
@@ -237,8 +273,36 @@ const PatientRegistrationForm = () => {
     }
   };
 
-  // Check if save button should be disabled
-  const isFormComplete = formData.first_name.trim() && formData.dob && formData.mobile.trim();
+  // Check if save button should be disabled (validate on fly)
+  const validateBeforeSubmit = (): Errors => {
+    const newErrors: Errors = {};
+
+    if (!formData.patient_name.trim()) {
+      newErrors.patient_name = 'Patient name is required';
+    }
+    if (!formData.dob) {
+      newErrors.dob = 'Date of birth is required';
+    } else {
+      const today = new Date();
+      const selectedDob = new Date(formData.dob);
+      if (selectedDob > today) {
+        newErrors.dob = 'Date of birth cannot be a future date';
+      }
+    }
+    if (!formData.mobile.trim()) {
+      newErrors.mobile = 'Mobile number is required';
+    } else if (!/^\d{10}$/.test(formData.mobile.replace(/\D/g, ''))) {
+      newErrors.mobile = 'Mobile number must be exactly 10 digits';
+    }
+    if (formData.id_proof_type && !formData.id_proof_number.trim()) {
+      newErrors.id_proof_number = 'ID proof number is required';
+    }
+
+    return newErrors;
+  };
+
+  const currentErrors = validateBeforeSubmit();
+  const isFormComplete = Object.keys(currentErrors).length === 0 && formData.patient_name.trim() && formData.dob && formData.mobile.trim();
 
   // Dropdown options
   const genderOptions = [
@@ -268,6 +332,18 @@ const PatientRegistrationForm = () => {
   const idProofOptions = [
     { value: 'aadhaar', label: 'Aadhaar' },
     { value: 'pan', label: 'PAN' },
+    { value: 'driving_license', label: 'Driving License' },
+  ];
+
+  const statusOptions = [
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'INACTIVE', label: 'Inactive' },
+  ];
+
+  const idProofPatientOptions = [
+    { value: 'aadhaar', label: 'Aadhaar' },
+    { value: 'pan', label: 'PAN' },
+    { value: 'passport', label: 'Passport' },
     { value: 'driving_license', label: 'Driving License' },
   ];
 
@@ -324,13 +400,23 @@ const PatientRegistrationForm = () => {
               {/* Main fields - 2 columns */}
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
+                  label="UHID"
+                  name="uhid"
+                  value={formData.uhid}
+                  readOnly
+                  disabled
+                  placeholder="Auto-generated"
+                  className="bg-gray-100 cursor-not-allowed"
+                />
+
+                <Input
                   label="Patient Name"
-                  name="first_name"
-                  value={formData.first_name}
+                  name="patient_name"
+                  value={formData.patient_name}
                   onChange={handleInputChange}
                   placeholder="Enter patient name"
                   required
-                  error={errors.first_name}
+                  error={errors.patient_name}
                 />
 
                 <Input
@@ -399,6 +485,34 @@ const PatientRegistrationForm = () => {
                   placeholder="Enter postal code"
                   error={errors.postal_code}
                 />
+
+                <Select
+                  label="Status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  options={statusOptions}
+                />
+
+                <Select
+                  label="ID Proof Type"
+                  name="id_proof_type"
+                  value={formData.id_proof_type}
+                  onChange={handleInputChange}
+                  options={idProofPatientOptions}
+                />
+
+                {formData.id_proof_type && (
+                  <Input
+                    label="ID Proof Number"
+                    name="id_proof_number"
+                    value={formData.id_proof_number}
+                    onChange={handleInputChange}
+                    placeholder="Enter ID number"
+                    required
+                    error={errors.id_proof_number}
+                  />
+                )}
               </div>
             </div>
 
@@ -1006,6 +1120,7 @@ const PatientRegistrationForm = () => {
             disabled={!isFormComplete}
             onClick={handleSubmit}
             className={!isFormComplete ? 'opacity-50 cursor-not-allowed' : ''}
+            title={!isFormComplete ? 'Please fix validation errors before submitting' : 'Save patient information'}
           >
             Save Patient
           </Button>

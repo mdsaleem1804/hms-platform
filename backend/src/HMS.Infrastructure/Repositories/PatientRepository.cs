@@ -1,45 +1,61 @@
+using HMS.Application.Repositories;
 using HMS.Domain.Entities;
+using HMS.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace HMS.Infrastructure.Repositories;
 
-public interface IPatientRepository
-{
-    Task<List<Patient>> GetAllAsync();
-    Task<Patient?> GetByIdAsync(string id);
-    Task<Patient> AddAsync(Patient patient);
-    Task<Patient> UpdateAsync(Patient patient);
-    Task<bool> DeleteAsync(string id);
-}
-
 public class PatientRepository : IPatientRepository
 {
+    private readonly AppDbContext _dbContext;
+
+    public PatientRepository(AppDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public async Task<Patient?> GetByMobileAsync(string mobile)
+    {
+        return await _dbContext.Patients
+            .FirstOrDefaultAsync(p => p.Mobile == mobile);
+    }
+
+    public async Task<Patient?> GetByIdAsync(long id)
+    {
+        return await _dbContext.Patients
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
+
     public async Task<List<Patient>> GetAllAsync()
     {
-        // TODO: Implement using DbContext
-        return await Task.FromResult(new List<Patient>());
+        return await _dbContext.Patients
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
     }
 
-    public async Task<Patient?> GetByIdAsync(string id)
+    public async Task<Patient> CreateAsync(Patient patient)
     {
-        // TODO: Implement using DbContext
-        return await Task.FromResult<Patient?>(null);
-    }
-
-    public async Task<Patient> AddAsync(Patient patient)
-    {
-        // TODO: Implement using DbContext
-        return await Task.FromResult(patient);
+        _dbContext.Patients.Add(patient);
+        await _dbContext.SaveChangesAsync();
+        return patient;
     }
 
     public async Task<Patient> UpdateAsync(Patient patient)
     {
-        // TODO: Implement using DbContext
-        return await Task.FromResult(patient);
+        patient.UpdatedAt = DateTime.UtcNow;
+        _dbContext.Patients.Update(patient);
+        await _dbContext.SaveChangesAsync();
+        return patient;
     }
 
-    public async Task<bool> DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(long id)
     {
-        // TODO: Implement using DbContext
-        return await Task.FromResult(false);
+        var patient = await GetByIdAsync(id);
+        if (patient == null)
+            return false;
+
+        _dbContext.Patients.Remove(patient);
+        await _dbContext.SaveChangesAsync();
+        return true;
     }
 }

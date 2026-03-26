@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using HMS.Application.Features.Patients;
 
 namespace HMS.API.Controllers;
 
@@ -13,115 +14,172 @@ public class PatientsController : ControllerBase
         _patientService = patientService;
     }
 
-    [HttpGet]
-    public async Task<ApiResponse<List<PatientDto>>> GetAll()
-    {
-        var patients = await _patientService.GetAllPatientsAsync();
-        return ApiResponse<List<PatientDto>>.SuccessResponse(patients, "Patients retrieved successfully");
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ApiResponse<PatientDto>> GetById(string id)
-    {
-        var patient = await _patientService.GetPatientByIdAsync(id);
-        return patient == null
-            ? ApiResponse<PatientDto>.FailureResponse("Patient not found")
-            : ApiResponse<PatientDto>.SuccessResponse(patient);
-    }
-
+    /// <summary>
+    /// Create a new patient registration
+    /// </summary>
+    /// <param name="request">Patient registration data</param>
+    /// <returns>201 Created with patient details including auto-generated Id and UHID</returns>
     [HttpPost]
-    public async Task<ApiResponse<PatientDto>> Create([FromBody] CreatePatientDto dto)
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<PatientDto>>> CreatePatient([FromBody] CreatePatientDto request)
     {
-        var patient = await _patientService.CreatePatientAsync(dto);
-        return ApiResponse<PatientDto>.SuccessResponse(patient, "Patient created successfully");
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<PatientDto>.FailureResponse("Invalid request data"));
+            }
+
+            var createdPatient = await _patientService.CreatePatientAsync(request);
+
+            return CreatedAtAction(
+                nameof(GetPatientById),
+                new { id = createdPatient.Id },
+                ApiResponse<PatientDto>.SuccessResponse(createdPatient, "Patient registered successfully")
+            );
+        }
+        catch (ArgumentException error)
+        {
+            return BadRequest(ApiResponse<PatientDto>.FailureResponse(error.Message));
+        }
+        catch (InvalidOperationException error)
+        {
+            return BadRequest(ApiResponse<PatientDto>.FailureResponse(error.Message));
+        }
+        catch (Exception)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                ApiResponse<PatientDto>.FailureResponse("An error occurred while creating the patient")
+            );
+        }
     }
 
+    /// <summary>
+    /// Get all patients
+    /// </summary>
+    /// <returns>200 OK with list of patients</returns>
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<PatientDto>>>> GetAllPatients()
+    {
+        try
+        {
+            var patients = await _patientService.GetAllPatientsAsync();
+            return Ok(ApiResponse<List<PatientDto>>.SuccessResponse(patients, "Patients retrieved successfully"));
+        }
+        catch (Exception)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                ApiResponse<List<PatientDto>>.FailureResponse("An error occurred while retrieving patients")
+            );
+        }
+    }
+
+    /// <summary>
+    /// Get a specific patient by ID
+    /// </summary>
+    /// <param name="id">Patient ID</param>
+    /// <returns>200 OK with patient details or 404 Not Found</returns>
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<PatientDto>>> GetPatientById(long id)
+    {
+        try
+        {
+            var patient = await _patientService.GetPatientByIdAsync(id);
+            
+            if (patient == null)
+            {
+                return NotFound(ApiResponse<PatientDto>.FailureResponse($"Patient with ID {id} not found"));
+            }
+
+            return Ok(ApiResponse<PatientDto>.SuccessResponse(patient, "Patient retrieved successfully"));
+        }
+        catch (Exception)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                ApiResponse<PatientDto>.FailureResponse("An error occurred while retrieving the patient")
+            );
+        }
+    }
+
+    /// <summary>
+    /// Update a patient
+    /// </summary>
+    /// <param name="id">Patient ID</param>
+    /// <param name="request">Updated patient data</param>
+    /// <returns>200 OK with updated patient details or 404 Not Found</returns>
     [HttpPut("{id}")]
-    public async Task<ApiResponse<PatientDto>> Update(string id, [FromBody] UpdatePatientDto dto)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<PatientDto>>> UpdatePatient(long id, [FromBody] UpdatePatientDto request)
     {
-        var patient = await _patientService.UpdatePatientAsync(id, dto);
-        return patient == null
-            ? ApiResponse<PatientDto>.FailureResponse("Patient not found")
-            : ApiResponse<PatientDto>.SuccessResponse(patient, "Patient updated successfully");
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<PatientDto>.FailureResponse("Invalid request data"));
+            }
+
+            request.Id = id;
+            var updatedPatient = await _patientService.UpdatePatientAsync(id, request);
+
+            return Ok(ApiResponse<PatientDto>.SuccessResponse(updatedPatient, "Patient updated successfully"));
+        }
+        catch (ArgumentException error)
+        {
+            return BadRequest(ApiResponse<PatientDto>.FailureResponse(error.Message));
+        }
+        catch (InvalidOperationException error)
+        {
+            return BadRequest(ApiResponse<PatientDto>.FailureResponse(error.Message));
+        }
+        catch (Exception)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                ApiResponse<PatientDto>.FailureResponse("An error occurred while updating the patient")
+            );
+        }
     }
 
+    /// <summary>
+    /// Delete a patient
+    /// </summary>
+    /// <param name="id">Patient ID</param>
+    /// <returns>200 OK if successful or 404 Not Found</returns>
     [HttpDelete("{id}")]
-    public async Task<ApiResponse<bool>> Delete(string id)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> DeletePatient(long id)
     {
-        var success = await _patientService.DeletePatientAsync(id);
-        return success
-            ? ApiResponse<bool>.SuccessResponse(true, "Patient deleted successfully")
-            : ApiResponse<bool>.FailureResponse("Patient not found");
+        try
+        {
+            var result = await _patientService.DeletePatientAsync(id);
+            
+            if (!result)
+            {
+                return NotFound(ApiResponse<object>.FailureResponse($"Patient with ID {id} not found"));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Patient deleted successfully"));
+        }
+        catch (InvalidOperationException error)
+        {
+            return NotFound(ApiResponse<object>.FailureResponse(error.Message));
+        }
+        catch (Exception)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                ApiResponse<object>.FailureResponse("An error occurred while deleting the patient")
+            );
+        }
     }
-}
-
-public interface IPatientService
-{
-    Task<List<PatientDto>> GetAllPatientsAsync();
-    Task<PatientDto?> GetPatientByIdAsync(string id);
-    Task<PatientDto> CreatePatientAsync(CreatePatientDto dto);
-    Task<PatientDto?> UpdatePatientAsync(string id, UpdatePatientDto dto);
-    Task<bool> DeletePatientAsync(string id);
-}
-
-public class PatientService : IPatientService
-{
-    public async Task<List<PatientDto>> GetAllPatientsAsync()
-    {
-        // TODO: Implement using repository
-        return await Task.FromResult(new List<PatientDto>());
-    }
-
-    public async Task<PatientDto?> GetPatientByIdAsync(string id)
-    {
-        // TODO: Implement using repository
-        return await Task.FromResult<PatientDto?>(null);
-    }
-
-    public async Task<PatientDto> CreatePatientAsync(CreatePatientDto dto)
-    {
-        // TODO: Implement business logic
-        return await Task.FromResult(new PatientDto());
-    }
-
-    public async Task<PatientDto?> UpdatePatientAsync(string id, UpdatePatientDto dto)
-    {
-        // TODO: Implement business logic
-        return await Task.FromResult<PatientDto?>(null);
-    }
-
-    public async Task<bool> DeletePatientAsync(string id)
-    {
-        // TODO: Implement using repository
-        return await Task.FromResult(false);
-    }
-}
-
-public class PatientDto
-{
-    public string Id { get; set; } = string.Empty;
-    public string UHID { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Mobile { get; set; } = string.Empty;
-    public DateTime DateOfBirth { get; set; }
-    public string Gender { get; set; } = string.Empty;
-}
-
-public class CreatePatientDto
-{
-    public string UHID { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Mobile { get; set; } = string.Empty;
-    public DateTime DateOfBirth { get; set; }
-    public string Gender { get; set; } = string.Empty;
-}
-
-public class UpdatePatientDto
-{
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Mobile { get; set; } = string.Empty;
-    public string Gender { get; set; } = string.Empty;
 }
