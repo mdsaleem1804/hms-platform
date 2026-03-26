@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
+import patientService from '@/services/patientService';
 
 interface FormData {
   patient_name: string;
@@ -77,6 +78,8 @@ interface Errors {
 }
 
 const PatientRegistrationForm = () => {
+  const router = useRouter();
+  
   const [formData, setFormData] = useState<FormData>({
     patient_name: '',
     uhid: '',
@@ -143,6 +146,8 @@ const PatientRegistrationForm = () => {
   });
 
   const [errors, setErrors] = useState<Errors>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-calculate age from DOB
@@ -265,11 +270,34 @@ const PatientRegistrationForm = () => {
   };
 
   // Submit
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      console.log('Form Data:', formData);
-      alert('Form submitted successfully! Check console for details.');
+    if (!validate()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await patientService.createPatient(formData);
+      
+      // Update UHID in the form with the response value
+      setFormData(prev => ({ ...prev, uhid: response.uhid }));
+      
+      // Show success message
+      alert(`Patient registered successfully! UHID: ${response.uhid}`);
+      
+      // Redirect to patients list after 1 second
+      setTimeout(() => {
+        router.push('/patients');
+      }, 1000);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to create patient. Please try again.';
+      setErrorMessage(errorMsg);
+      alert(`Error: ${errorMsg}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -1108,21 +1136,27 @@ const PatientRegistrationForm = () => {
       {/* Sticky Footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex justify-end gap-3">
+          {errorMessage && (
+            <div className="flex-1 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {errorMessage}
+            </div>
+          )}
           <Button
             variant="secondary"
             size="md"
-            onClick={() => window.location.href = '/patients'}
+            onClick={() => router.push('/patients')}
+            disabled={isLoading}
           >
             Cancel
           </Button>
           <Button
             size="md"
-            disabled={!isFormComplete}
+            disabled={!isFormComplete || isLoading}
             onClick={handleSubmit}
-            className={!isFormComplete ? 'opacity-50 cursor-not-allowed' : ''}
-            title={!isFormComplete ? 'Please fix validation errors before submitting' : 'Save patient information'}
+            className={(!isFormComplete || isLoading) ? 'opacity-50 cursor-not-allowed' : ''}
+            title={!isFormComplete ? 'Please fix validation errors before submitting' : isLoading ? 'Saving patient information...' : 'Save patient information'}
           >
-            Save Patient
+            {isLoading ? 'Saving...' : 'Save Patient'}
           </Button>
         </div>
       </div>

@@ -4,6 +4,10 @@ using HMS.Domain.Entities;
 
 namespace HMS.Application.Features.Patients;
 
+/// <summary>
+/// Service layer for patient operations
+/// Throws meaningful exceptions that are handled by GlobalExceptionMiddleware
+/// </summary>
 public class PatientService : IPatientService
 {
     private readonly IPatientRepository _patientRepository;
@@ -18,12 +22,12 @@ public class PatientService : IPatientService
         // Validate required fields
         if (string.IsNullOrWhiteSpace(request.PatientName))
         {
-            throw new ArgumentException("PatientName is required", nameof(request.PatientName));
+            throw new ArgumentException("Patient name is required", nameof(request.PatientName));
         }
 
         if (string.IsNullOrWhiteSpace(request.Mobile))
         {
-            throw new ArgumentException("Mobile is required", nameof(request.Mobile));
+            throw new ArgumentException("Mobile number is required", nameof(request.Mobile));
         }
 
         if (request.Dob == default)
@@ -65,10 +69,7 @@ public class PatientService : IPatientService
     public async Task<PatientDto?> GetPatientByIdAsync(long id)
     {
         var patient = await _patientRepository.GetByIdAsync(id);
-        if (patient == null)
-            return null;
-
-        return MapToDto(patient);
+        return patient == null ? null : MapToDto(patient);
     }
 
     public async Task<List<PatientDto>> GetAllPatientsAsync()
@@ -82,12 +83,12 @@ public class PatientService : IPatientService
         // Validate required fields
         if (string.IsNullOrWhiteSpace(request.PatientName))
         {
-            throw new ArgumentException("PatientName is required", nameof(request.PatientName));
+            throw new ArgumentException("Patient name is required", nameof(request.PatientName));
         }
 
         if (string.IsNullOrWhiteSpace(request.Mobile))
         {
-            throw new ArgumentException("Mobile is required", nameof(request.Mobile));
+            throw new ArgumentException("Mobile number is required", nameof(request.Mobile));
         }
 
         if (request.Dob == default)
@@ -99,7 +100,7 @@ public class PatientService : IPatientService
         var existingPatient = await _patientRepository.GetByIdAsync(id);
         if (existingPatient == null)
         {
-            throw new InvalidOperationException($"Patient with ID {id} not found");
+            throw new KeyNotFoundException($"Patient with ID {id} not found");
         }
 
         // Check for duplicate mobile if mobile is different
@@ -138,7 +139,7 @@ public class PatientService : IPatientService
         var patient = await _patientRepository.GetByIdAsync(id);
         if (patient == null)
         {
-            throw new InvalidOperationException($"Patient with ID {id} not found");
+            throw new KeyNotFoundException($"Patient with ID {id} not found");
         }
 
         return await _patientRepository.DeleteAsync(id);

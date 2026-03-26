@@ -47,6 +47,9 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure middleware - ORDER IS CRITICAL
+// Exception handler must be EARLY in the pipeline
+app.UseGlobalExceptionHandler();
+
 // Swagger middleware must be registered FIRST before routing
 app.UseSwagger(options =>
 {
@@ -67,9 +70,6 @@ app.UseCors("AllowAll");
 
 app.MapControllers();
 app.MapGet("/", () => Results.Ok(new { message = "HMS API is running" }));
-
-// Global exception handling - AFTER endpoint mapping
-app.UseGlobalExceptionHandler();
 
 try
 {

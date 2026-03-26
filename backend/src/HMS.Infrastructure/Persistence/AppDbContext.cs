@@ -43,6 +43,7 @@ public class AppDbContext : DbContext
 
             entity.Property(p => p.Dob)
                 .HasColumnName("dob")
+                .HasColumnType("timestamp without time zone")
                 .IsRequired();
 
             entity.Property(p => p.Gender)
