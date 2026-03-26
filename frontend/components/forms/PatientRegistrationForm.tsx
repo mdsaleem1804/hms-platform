@@ -283,10 +283,10 @@ const PatientRegistrationForm = () => {
       const response = await patientService.createPatient(formData);
       
       // Update UHID in the form with the response value
-      setFormData(prev => ({ ...prev, uhid: response.uhid }));
+      setFormData(prev => ({ ...prev, uhid: response?.data?.uhid || '' }));
       
       // Show success message
-      alert(`Patient registered successfully! UHID: ${response.uhid}`);
+      alert(`Patient registered successfully! UHID: ${response?.data?.uhid || 'registered'}`);
       
       // Redirect to patients list after 1 second
       setTimeout(() => {

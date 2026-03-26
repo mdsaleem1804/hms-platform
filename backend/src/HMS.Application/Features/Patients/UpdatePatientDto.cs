@@ -11,7 +11,7 @@ public class UpdatePatientDto
     public string Email { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PostalCode { get; set; } = string.Empty;
-    public string Photo { get; set; } = string.Empty;
+    public string?   Photo { get; set; } = string.Empty;
     public string IdProofType { get; set; } = string.Empty;
     public string IdProofNumber { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;

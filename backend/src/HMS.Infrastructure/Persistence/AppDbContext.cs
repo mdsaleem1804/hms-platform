@@ -71,6 +71,7 @@ public class AppDbContext : DbContext
                 .HasMaxLength(10);
 
             entity.Property(p => p.Photo)
+                .IsRequired(false)
                 .HasColumnName("photo");
 
             entity.Property(p => p.IdProofType)

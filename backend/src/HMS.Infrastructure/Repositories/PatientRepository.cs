@@ -20,6 +20,12 @@ public class PatientRepository : IPatientRepository
             .FirstOrDefaultAsync(p => p.Mobile == mobile);
     }
 
+    public async Task<Patient?> GetByUhidAsync(string uhid)
+    {
+        return await _dbContext.Patients
+            .FirstOrDefaultAsync(p => p.Uhid == uhid);
+    }
+
     public async Task<Patient?> GetByIdAsync(long id)
     {
         return await _dbContext.Patients

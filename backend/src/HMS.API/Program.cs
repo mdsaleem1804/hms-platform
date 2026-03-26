@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.WebHost.UseUrls("http://localhost:7000");
 // Configure services
 builder.Services
     .AddControllers()
@@ -31,11 +31,25 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 builder.Services.AddApiLogging();
-builder.Services.AddApplicationServices();
+builder.Services.AddApplicationServices(builder.Configuration);
 
-// CORS
+// CORS Configuration for Frontend Integration
 builder.Services.AddCors(options =>
 {
+    // Policy for frontend development (Next.js on localhost:3000)
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:3000",      // Next.js development
+            "http://127.0.0.1:3000",      // Alternative localhost
+            "https://localhost:3000"      // HTTPS variant
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();  // Important for cookies/auth headers
+    });
+    
+    // Fallback policy for other environments (if needed)
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
@@ -64,9 +78,11 @@ app.UseSwaggerUI(options =>
     options.DefaultModelsExpandDepth(0);
 });
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseRouting();
-app.UseCors("AllowAll");
+
+// Apply CORS policy (must be after UseRouting and before MapControllers)
+app.UseCors("AllowFrontend");
 
 app.MapControllers();
 app.MapGet("/", () => Results.Ok(new { message = "HMS API is running" }));

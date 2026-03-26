@@ -19,5 +19,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=builder /app/publish .
 
-EXPOSE 5134 5000
+EXPOSE 7000 5000
 ENTRYPOINT ["dotnet", "HMS.API.dll"]

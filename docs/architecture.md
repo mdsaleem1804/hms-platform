@@ -334,7 +334,7 @@ DELETE /api/patients/{id}     - Delete (soft delete)
 
 ### Docker Compose
 - **frontend**: Next.js container (port 3000)
-- **backend**: ASP.NET Core container (port 5134)
+- **backend**: ASP.NET Core container (port 7000)
 - **database**: PostgreSQL container (port 5432)
 
 ---
