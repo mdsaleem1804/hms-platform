@@ -2,6 +2,7 @@ using HMS.API.Extensions;
 using HMS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:7000");
@@ -32,7 +33,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddApiLogging();
 builder.Services.AddApplicationServices(builder.Configuration);
-
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 // CORS Configuration for Frontend Integration
 builder.Services.AddCors(options =>
 {

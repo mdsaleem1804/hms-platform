@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -283,19 +284,25 @@ const PatientRegistrationForm = () => {
       const response = await patientService.createPatient(formData);
       
       // Update UHID in the form with the response value
-      setFormData(prev => ({ ...prev, uhid: response?.data?.uhid || '' }));
+      const uhid = response?.uhid || '';
+      setFormData(prev => ({ ...prev, uhid }));
       
-      // Show success message
-      alert(`Patient registered successfully! UHID: ${response?.data?.uhid || 'registered'}`);
+      // Show success toast
+      toast.success(`Patient registered successfully! UHID: ${uhid}`);
       
-      // Redirect to patients list after 1 second
+      // Redirect to patients list after 1.5 seconds
       setTimeout(() => {
         router.push('/patients');
-      }, 1000);
+      }, 1500);
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to create patient. Please try again.';
+      let errorMsg = 'Failed to create patient. Please try again.';
+      
+      if (error instanceof Error) {
+        errorMsg = error.message;
+      }
+      
       setErrorMessage(errorMsg);
-      alert(`Error: ${errorMsg}`);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }

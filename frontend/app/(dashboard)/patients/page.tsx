@@ -5,7 +5,7 @@ import { usePatients } from '@/hooks/usePatients';
 import PatientsTable from '@/components/tables/PatientsTable';
 
 export default function Patients() {
-  const { patients, loading, error } = usePatients();
+  const { patients, loading, error, refetch } = usePatients();
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -29,7 +29,7 @@ export default function Patients() {
         <div className="text-center py-12 text-gray-500">Loading...</div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <PatientsTable patients={patients} />
+          <PatientsTable patients={patients} onRefresh={refetch} />
         </div>
       )}
     </div>

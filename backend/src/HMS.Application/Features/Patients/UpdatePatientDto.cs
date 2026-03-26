@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace HMS.Application.Features.Patients;
 
 public class UpdatePatientDto
 {
     public long Id { get; set; }
+    [JsonPropertyName("patient_name")]
     public string PatientName { get; set; } = string.Empty;
     public DateTime Dob { get; set; }
     public string Gender { get; set; } = string.Empty;
