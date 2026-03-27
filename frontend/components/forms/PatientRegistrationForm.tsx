@@ -6,7 +6,9 @@ import toast from 'react-hot-toast';
 import patientService from '@/services/patientService';
 import PatientInfoSection from './patient-sections/PatientInfoSection';
 import EmergencyContactSection from './patient-sections/EmergencyContactSection';
-import AttenderSection from './patient-sections/AttenderSection';import ModeOfArrivalSection from './patient-sections/ModeOfArrivalSection';
+import AttenderSection from './patient-sections/AttenderSection';
+import ModeOfArrivalSection from './patient-sections/ModeOfArrivalSection';
+import Tabs from '../ui/Tabs';
 interface FormData {
   patient_name: string;
   uhid: string;
@@ -303,81 +305,95 @@ const PatientRegistrationForm = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Patient Registration</h1>
-          <p className="text-gray-600 mt-2">Complete patient information for hospital records</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6 pb-20">
-          {/* SECTION 1: PATIENT INFORMATION */}
-          <PatientInfoSection
-            formData={{
-              patient_name: formData.patient_name,
-              dob: formData.dob,
-              age: formData.age,
-              gender: formData.gender,
-              blood_group: formData.blood_group,
-              mobile: formData.mobile,
-              email: formData.email,
-              address: formData.address,
-              postal_code: formData.postal_code,
-              photo: formData.photo,
-              status: formData.status,
-              id_proof_type: formData.id_proof_type,
-              id_proof_number: formData.id_proof_number,
-            }}
-            errors={errors}
-            onInputChange={handleInputChange}
-            onPhotoUpload={handlePhotoUpload}
-            onStatusChange={() => setFormData(prev => ({
-              ...prev,
-              status: prev.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
-            }))}
-            fileInputRef={fileInputRef}
-          />
-
-          {/* SECTION 2: EMERGENCY CONTACT */}
-          <EmergencyContactSection
-            emergencyContact={formData.emergency_contact}
-            onNestedChange={(field, value) => handleNestedChange('emergency_contact', field, value)}
-          />
-
-          {/* SECTION 3: ATTENDER DETAILS */}
-          <AttenderSection
-            attender={formData.attender}
-            errors={errors}
-            onNestedChange={(field, value) => handleNestedChange('attender', field, value)}
-          />
-
-          {/* SECTION 4: MODE OF ARRIVAL */}
-          <ModeOfArrivalSection
-            referral={formData.referral}
-            onCheckboxChange={(field, value) => handleNestedChange('referral', field, value)}
-            onInputChange={(field, value) => handleNestedChange('referral', field, value)}
-          />
-
-          {/* FORM ACTIONS */}
-          <div className="flex gap-4 justify-end pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={() => router.push('/patients')}
-              className="px-6 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              {isLoading ? 'Saving...' : 'Save Patient'}
-            </button>
-          </div>
-        </form>
+    <div className="dashboard-form-container w-full">
+      {/* Header */}
+      <div className="mb-4 mt-6">
+        <h1 className="text-3xl font-bold text-gray-900">Patient Registration</h1>
+        <p className="text-gray-600 mt-1">Complete patient information for hospital records</p>
       </div>
+      <form onSubmit={handleSubmit} className="pb-10">
+        <Tabs
+          tabs={[
+            {
+              label: 'Patient Information',
+              content: (
+                <PatientInfoSection
+                  formData={{
+                    patient_name: formData.patient_name,
+                    dob: formData.dob,
+                    age: formData.age,
+                    gender: formData.gender,
+                    blood_group: formData.blood_group,
+                    mobile: formData.mobile,
+                    email: formData.email,
+                    address: formData.address,
+                    postal_code: formData.postal_code,
+                    photo: formData.photo,
+                    status: formData.status,
+                    id_proof_type: formData.id_proof_type,
+                    id_proof_number: formData.id_proof_number,
+                  }}
+                  errors={errors}
+                  onInputChange={handleInputChange}
+                  onPhotoUpload={handlePhotoUpload}
+                  onStatusChange={() => setFormData(prev => ({
+                    ...prev,
+                    status: prev.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+                  }))}
+                  fileInputRef={fileInputRef}
+                />
+              ),
+            },
+            {
+              label: 'Emergency Contact',
+              content: (
+                <EmergencyContactSection
+                  emergencyContact={formData.emergency_contact}
+                  onNestedChange={(field, value) => handleNestedChange('emergency_contact', field, value)}
+                />
+              ),
+            },
+            {
+              label: 'Attender Details',
+              content: (
+                <AttenderSection
+                  attender={formData.attender}
+                  errors={errors}
+                  onNestedChange={(field, value) => handleNestedChange('attender', field, value)}
+                />
+              ),
+            },
+            {
+              label: 'Mode of Arrival',
+              content: (
+                <ModeOfArrivalSection
+                  referral={formData.referral}
+                  onCheckboxChange={(field, value) => handleNestedChange('referral', field, value)}
+                  onInputChange={(field, value) => handleNestedChange('referral', field, value)}
+                />
+              ),
+            },
+          ]}
+          defaultActive={0}
+        />
+        {/* FORM ACTIONS */}
+        <div className="flex gap-4 justify-end pt-6 border-t border-gray-200 mt-8">
+          <button
+            type="button"
+            onClick={() => router.push('/patients')}
+            className="px-6 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            {isLoading ? 'Saving...' : 'Save Patient'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

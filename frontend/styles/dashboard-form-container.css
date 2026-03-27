@@ -1,0 +1,10 @@
+/* Utility class for dashboard forms to align next to sidebar and be responsive */
+.dashboard-form-container {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  transition: margin 0.2s, padding 0.2s;
+}
