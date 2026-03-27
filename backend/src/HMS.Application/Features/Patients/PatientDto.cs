@@ -1,5 +1,23 @@
 namespace HMS.Application.Features.Patients;
 
+public class PatientListQueryDto
+{
+    public string? Search { get; set; }
+    public string? Gender { get; set; }
+    public string? Status { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+}
+
+public class PagedResultDto<T>
+{
+    public List<T> Items { get; set; } = [];
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalRecords { get; set; }
+    public int TotalPages { get; set; }
+}
+
 /// <summary>
 /// Lightweight patient summary for search/lookup results.
 /// </summary>

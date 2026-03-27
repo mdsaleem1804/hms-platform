@@ -1,153 +1,122 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
-import patientService, { PatientResponse } from '@/services/patientService';
+import { CalendarPlus, Eye, Pencil } from 'lucide-react';
+import { PatientResponse } from '@/services/patientService';
 
 interface PatientsTableProps {
   patients: PatientResponse[];
-  onRefresh?: () => void;
 }
 
-export default function PatientsTable({ patients = [], onRefresh }: PatientsTableProps) {
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [showConfirm, setShowConfirm] = useState<number | null>(null);
-
-  const handleDeleteClick = (id: number) => {
-    setShowConfirm(id);
-  };
-
-  const handleConfirmDelete = async (id: number) => {
-    try {
-      setDeletingId(id);
-      await patientService.deletePatient(id);
-      toast.success('Patient deleted successfully');
-      setShowConfirm(null);
-      onRefresh?.();
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to delete patient';
-      toast.error(errorMsg);
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setShowConfirm(null);
-  };
-
+export default function PatientsTable({ patients = [] }: PatientsTableProps) {
   if (!patients || patients.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
-        No patients found. <Link href="/patients/register" className="text-blue-600 hover:underline">Add one</Link>
+      <div className="text-center py-14 text-gray-500">
+        <p className="text-base font-medium">No patients found.</p>
+        <p className="mt-1 text-sm">
+          Try changing filters or{' '}
+          <Link href="/patients/register" className="text-blue-600 hover:underline">add a new patient</Link>.
+        </p>
       </div>
     );
   }
 
   return (
     <>
-      <table className="w-full">
-        <thead className="bg-gray-50 border-b">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+      <div className="max-h-[68vh] overflow-auto">
+        <table className="w-full min-w-[980px] border-separate border-spacing-0">
+        <thead className="sticky top-0 z-10 bg-gray-100">
+          <tr className="border-b border-gray-200">
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
               UHID
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
               Name
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
               Mobile
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
               DOB
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+            <th className="w-24 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
               Gender
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+            <th className="w-24 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
               Status
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y">
-          {patients.map((patient) => (
-            <tr key={patient.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
-                {patient.uhid}
+        <tbody>
+          {patients.map((patient, index) => (
+            <tr
+              key={patient.id}
+              className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'} hover:bg-blue-50 transition-colors`}
+            >
+              <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold text-blue-700">
+                <Link href={`/patients/${patient.id}`} className="hover:underline">
+                  {patient.uhid}
+                </Link>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+              <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
                 {patient.patientName}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
                 {patient.mobile}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
                 {new Date(patient.dob).toLocaleDateString('en-IN')}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className="px-2 py-1 bg-gray-100 rounded text-gray-800 capitalize">
+              <td className="whitespace-nowrap px-4 py-3 text-sm">
+                <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium capitalize text-gray-700">
                   {patient.gender}
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  patient.status === 'ACTIVE'
-                    ? 'bg-green-50 text-green-700'
-                    : 'bg-red-50 text-red-700'
+              <td className="whitespace-nowrap px-4 py-3 text-sm">
+                <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                  patient.status.toUpperCase() === 'ACTIVE'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
                 }`}>
-                  {patient.status}
+                  {patient.status.toUpperCase() === 'ACTIVE' ? 'Active' : 'Inactive'}
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2 flex">
+              <td className="whitespace-nowrap px-4 py-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/patients/${patient.id}`}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded border border-gray-300 text-gray-700 transition hover:bg-gray-100"
+                    title="View patient"
+                    aria-label="View patient"
+                  >
+                    <Eye size={15} />
+                  </Link>
                 <Link
                   href={`/patients/${patient.id}/edit`}
-                  className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded border border-blue-200 text-blue-700 transition hover:bg-blue-50"
+                  title="Edit patient"
+                  aria-label="Edit patient"
                 >
-                  Edit
+                  <Pencil size={15} />
                 </Link>
-                <button
-                  onClick={() => handleDeleteClick(patient.id)}
-                  className="text-red-600 hover:text-red-800 hover:underline font-medium"
-                  disabled={deletingId === patient.id}
+                <Link
+                  href={`/appointments/book?patientId=${patient.id}`}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded border border-emerald-200 text-emerald-700 transition hover:bg-emerald-50"
+                  title="Book appointment"
+                  aria-label="Book appointment"
                 >
-                  {deletingId === patient.id ? 'Deleting...' : 'Delete'}
-                </button>
+                  <CalendarPlus size={15} />
+                </Link>
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      {showConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Delete Patient?
-            </h3>
-            <p className="text-gray-600 text-sm mb-6">
-              This action cannot be undone. Are you sure you want to delete this patient?
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={handleCancelDelete}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleConfirmDelete(showConfirm)}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </>
   );
 }

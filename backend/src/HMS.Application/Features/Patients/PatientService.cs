@@ -99,6 +99,35 @@ public class PatientService : IPatientService
         return patients.Select(MapToDto).ToList();
     }
 
+    public async Task<PagedResultDto<PatientDto>> GetPatientsAsync(PatientListQueryDto query)
+    {
+        var page = Math.Max(1, query.Page);
+        var pageSize = query.PageSize switch
+        {
+            <= 10 => 10,
+            <= 25 => 25,
+            <= 50 => 50,
+            <= 100 => 100,
+            _ => 100,
+        };
+
+        var (items, totalRecords) = await _patientRepository.GetPagedAsync(
+            query.Search,
+            query.Gender,
+            query.Status,
+            page,
+            pageSize);
+
+        return new PagedResultDto<PatientDto>
+        {
+            Items = items.Select(MapToDto).ToList(),
+            Page = page,
+            PageSize = pageSize,
+            TotalRecords = totalRecords,
+            TotalPages = totalRecords == 0 ? 0 : (int)Math.Ceiling(totalRecords / (double)pageSize),
+        };
+    }
+
     public async Task<List<PatientSummaryDto>> SearchPatientsAsync(string query, int limit)
     {
         if (string.IsNullOrWhiteSpace(query))

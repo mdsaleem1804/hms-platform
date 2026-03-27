@@ -68,10 +68,6 @@ class AppointmentService {
     const response = await apiClient.put<any>(`/api/appointments/${id}`, request);
     return response.data.data;
   }
-
-  async delete(id: string): Promise<void> {
-    await apiClient.delete(`/api/appointments/${id}`);
-  }
 }
 
 export default new AppointmentService();

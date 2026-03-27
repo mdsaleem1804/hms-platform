@@ -52,17 +52,37 @@ public class PatientsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all patients
+    /// Get patients with optional search, filters and pagination
     /// </summary>
-    /// <returns>200 OK with list of patients</returns>
+    /// <returns>200 OK with paged patient list</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ApiResponse<List<PatientDto>>>> GetAllPatients()
+    public async Task<ActionResult<ApiResponse<PagedResultDto<PatientDto>>>> GetAllPatients(
+        [FromQuery(Name = "q")] string? search,
+        [FromQuery] string? gender,
+        [FromQuery] string? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
-        _logger.LogInformation("Fetching all patients");
-        var patients = await _patientService.GetAllPatientsAsync();
-        return Ok(ApiResponse<List<PatientDto>>.SuccessResponse(patients, "Patients retrieved successfully"));
+        _logger.LogInformation(
+            "Fetching patients page {Page} with pageSize {PageSize}, search={Search}, gender={Gender}, status={Status}",
+            page,
+            pageSize,
+            search,
+            gender,
+            status);
+
+        var result = await _patientService.GetPatientsAsync(new PatientListQueryDto
+        {
+            Search = search,
+            Gender = gender,
+            Status = status,
+            Page = page,
+            PageSize = pageSize,
+        });
+
+        return Ok(ApiResponse<PagedResultDto<PatientDto>>.SuccessResponse(result, "Patients retrieved successfully"));
     }
 
     /// <summary>

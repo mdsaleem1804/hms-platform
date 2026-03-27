@@ -24,7 +24,6 @@ export const patientService = {
   getById: (id: string) => apiClient.get(`/api/patients/${id}`),
   create: (data: unknown) => apiClient.post('/api/patients', data),
   update: (id: string, data: unknown) => apiClient.put(`/api/patients/${id}`, data),
-  delete: (id: string) => apiClient.delete(`/api/patients/${id}`),
 };
 
 export const appointmentService = {
@@ -32,7 +31,6 @@ export const appointmentService = {
   getById: (id: string) => apiClient.get(`/api/appointments/${id}`),
   create: (data: unknown) => apiClient.post('/api/appointments', data),
   update: (id: string, data: unknown) => apiClient.put(`/api/appointments/${id}`, data),
-  delete: (id: string) => apiClient.delete(`/api/appointments/${id}`),
 };
 
 export default apiClient;

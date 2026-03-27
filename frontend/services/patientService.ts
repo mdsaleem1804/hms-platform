@@ -135,14 +135,71 @@ export interface ApiResponse<T> {
   message: string;
 }
 
+export interface PatientListParams {
+  q?: string;
+  gender?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PagedPatientResult {
+  items: PatientResponse[];
+  page: number;
+  pageSize: number;
+  totalRecords: number;
+  totalPages: number;
+}
+
 export interface PatientServiceType {
   createPatient(data: CreatePatientPayload): Promise<PatientResponse>;
-  getPatients(): Promise<PatientResponse[]>;
+  getPatients(params?: PatientListParams): Promise<PagedPatientResult>;
   getPatientById(id: number): Promise<PatientResponse>;
   updatePatient(id: number, data: CreatePatientPayload): Promise<PatientResponse>;
-  deletePatient(id: number): Promise<void>;
   searchPatients(query: string, limit?: number): Promise<PatientSummary[]>;
 }
+
+const toNumber = (value: unknown, fallback: number): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const normalizePagedPatients = (
+  payload: unknown,
+  params: PatientListParams
+): PagedPatientResult => {
+  // Backward-compatible shape: API may still return PatientResponse[] directly.
+  if (Array.isArray(payload)) {
+    const page = params.page ?? 1;
+    const pageSize = params.pageSize ?? 10;
+    const totalRecords = payload.length;
+    return {
+      items: payload as PatientResponse[],
+      page,
+      pageSize,
+      totalRecords,
+      totalPages: totalRecords === 0 ? 0 : Math.ceil(totalRecords / pageSize),
+    };
+  }
+
+  const data = (payload ?? {}) as Record<string, unknown>;
+  const items = (data.items ?? data.Items ?? []) as PatientResponse[];
+  const page = toNumber(data.page ?? data.Page, params.page ?? 1);
+  const pageSize = toNumber(data.pageSize ?? data.PageSize, params.pageSize ?? 10);
+  const totalRecords = toNumber(data.totalRecords ?? data.TotalRecords, items.length);
+  const totalPages = toNumber(
+    data.totalPages ?? data.TotalPages,
+    totalRecords === 0 ? 0 : Math.ceil(totalRecords / pageSize)
+  );
+
+  return {
+    items,
+    page,
+    pageSize,
+    totalRecords,
+    totalPages,
+  };
+};
 
 const patientService: PatientServiceType = {
   async createPatient(data: CreatePatientPayload): Promise<PatientResponse> {
@@ -158,10 +215,12 @@ const patientService: PatientServiceType = {
     }
   },
 
-  async getPatients(): Promise<PatientResponse[]> {
+  async getPatients(params: PatientListParams = {}): Promise<PagedPatientResult> {
     try {
-      const response = await apiClient.get<ApiResponse<PatientResponse[]>>('/api/patients');
-      return response.data.data;
+      const response = await apiClient.get<ApiResponse<PagedPatientResult>>('/api/patients', {
+        params,
+      });
+      return normalizePagedPatients(response.data.data, params);
     } catch (error) {
       throw new Error(
         axios.isAxiosError(error)
@@ -193,18 +252,6 @@ const patientService: PatientServiceType = {
         axios.isAxiosError(error)
           ? error.response?.data?.message || error.message
           : 'Failed to update patient'
-      );
-    }
-  },
-
-  async deletePatient(id: number): Promise<void> {
-    try {
-      await apiClient.delete(`/api/patients/${id}`);
-    } catch (error) {
-      throw new Error(
-        axios.isAxiosError(error)
-          ? error.response?.data?.message || error.message
-          : 'Failed to delete patient'
       );
     }
   },
