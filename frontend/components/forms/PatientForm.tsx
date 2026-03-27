@@ -120,7 +120,7 @@ const defaultFormData: PatientFormData = {
     offline_public_others: '',
     offline_signages_name_boards: false,
     offline_signages_pamphlets: false,
-    offline_signages_others: false,
+    offline_signages_others: '',
     offline_mass_tv: false,
     offline_mass_fm: false,
     offline_mass_newspapers: false,
@@ -146,12 +146,11 @@ const PatientForm: React.FC<PatientFormProps> = ({
     attender: { ...defaultFormData.attender, ...initialData?.attender },
     referral: { ...defaultFormData.referral, ...initialData?.referral },
   });
-  const [errors, setErrors] = useState<Record<string, string>>(externalErrors);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    setErrors(externalErrors);
-  }, [externalErrors]);
+  // Merge external (server) errors with local (client) validation errors
+  const allErrors = { ...externalErrors, ...errors };
 
   // Auto-calculate age from DOB
   useEffect(() => {
@@ -230,7 +229,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
               content: (
                 <PatientInfoSection
                   formData={formData}
-                  errors={errors}
+                  errors={allErrors}
                   onInputChange={handleInputChange}
                   onPhotoUpload={handlePhotoUpload}
                   onStatusChange={() => setFormData(prev => ({
@@ -255,7 +254,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
               content: (
                 <AttenderSection
                   attender={formData.attender}
-                  errors={errors}
+                  errors={allErrors}
                   onNestedChange={(field, value) => handleNestedChange('attender', field, value)}
                 />
               ),
