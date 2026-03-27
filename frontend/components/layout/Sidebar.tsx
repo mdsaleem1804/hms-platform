@@ -4,77 +4,56 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
-export default function Sidebar() {
+export default function Sidebar({ expanded: expandedProp, onToggle }: { expanded?: boolean, onToggle?: (expanded: boolean) => void } = {}) {
   const pathname = usePathname();
-  const [isExpanded, setIsExpanded] = useState(true);
-
-  const isActive = (path: string) => pathname.includes(path);
-
+  const [expanded, setExpanded] = useState(expandedProp ?? true);
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: '📊' },
     { name: 'Patients', path: '/patients', icon: '👥' },
     { name: 'Appointments', path: '/appointments', icon: '📅' },
   ];
-
+  const handleToggle = () => {
+    setExpanded((prev) => {
+      const next = !prev;
+      onToggle?.(next);
+      return next;
+    });
+  };
   return (
-    <aside
-      className={`${
-        isExpanded ? 'w-64' : 'w-16'
-      } bg-gray-900 text-white shadow-lg transition-all duration-300 flex flex-col fixed h-screen left-0 top-0 z-50`}
-    >
-      {/* Logo / Header */}
-      <div className="p-4 border-b border-gray-700">
-        {isExpanded ? (
-          <>
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold">HMS</h1>
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-gray-400 hover:text-white transition"
-                title="Collapse sidebar"
-              >
-                ←
-              </button>
-            </div>
-            <p className="text-gray-400 text-xs mt-1">Hospital Management</p>
-          </>
-        ) : (
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-400 hover:text-white transition w-full text-center"
-            title="Expand sidebar"
-          >
-            →
-          </button>
-        )}
+    <aside className={`${expanded ? 'w-64' : 'w-16'} h-screen bg-white border-r border-gray-200 flex flex-col justify-between fixed left-0 top-0 z-40 transition-all duration-200`}>
+      {/* Logo/Header */}
+      <div className="px-4 py-5 border-b border-gray-200 flex items-center justify-between">
+        <div>
+          <h1 className={`text-2xl font-bold text-blue-700 tracking-tight transition-all duration-200 ${expanded ? '' : 'text-center text-lg'}`}>HMS</h1>
+          {expanded && <p className="text-xs text-gray-400 mt-1">Hospital Management</p>}
+        </div>
+        <button
+          onClick={handleToggle}
+          className="ml-2 text-gray-400 hover:text-blue-700 focus:outline-none"
+          title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+        >
+          {expanded ? <span>&#x25C0;</span> : <span>&#x25B6;</span>}
+        </button>
       </div>
-
       {/* Navigation */}
-      <nav className="mt-6 px-3 space-y-1 flex-1">
+      <nav className="flex-1 px-2 py-6 space-y-1">
         {menuItems.map((item) => (
-          <Link key={item.path} href={item.path}>
-            <div
-              className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                isActive(item.path)
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800'
-              }`}
+          <Link key={item.path} href={item.path} legacyBehavior>
+            <a
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium transition-colors text-base
+                ${pathname.startsWith(item.path)
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-100'}
+              `}
             >
               <span className="text-lg">{item.icon}</span>
-              {isExpanded && <span className="text-sm font-medium">{item.name}</span>}
-            </div>
+              {expanded && item.name}
+            </a>
           </Link>
         ))}
       </nav>
-
-      {/* Footer */}
-      <div className="p-3 border-t border-gray-700">
-        {isExpanded ? (
-          <p className="text-gray-400 text-xs text-center">© 2024 HMS</p>
-        ) : (
-          <div className="text-center text-xs text-gray-400">©</div>
-        )}
-      </div>
+      {/* Copyright */}
+      <div className={`px-6 py-4 border-t border-gray-100 text-xs text-gray-400 ${expanded ? '' : 'text-center px-0'}`}>© 2024 HMS</div>
     </aside>
   );
 }

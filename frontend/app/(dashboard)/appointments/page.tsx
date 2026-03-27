@@ -8,23 +8,21 @@ export default function Appointments() {
   const { appointments, loading, error } = useAppointments();
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Appointments</h1>
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Appointments</h1>
         <Link
           href="/appointments/book"
-          className="px-4 py-2 bg-blue-600 text-white text-sm md:text-base rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-blue-600 text-white text-base rounded-lg hover:bg-blue-700 transition-colors"
         >
           Book Appointment
         </Link>
       </div>
-
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 text-sm">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 text-sm mb-4">
           Error loading appointments: {error}
         </div>
       )}
-
       {loading ? (
         <div className="text-center py-12 text-gray-500">Loading...</div>
       ) : (
@@ -32,6 +30,6 @@ export default function Appointments() {
           <AppointmentsTable appointments={appointments} />
         </div>
       )}
-    </div>
+    </>
   );
 }
