@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import toast from 'react-hot-toast';
 import patientService from '@/services/patientService';
 import PatientForm, { PatientFormData } from '@/components/forms/PatientForm';
 
@@ -82,8 +81,6 @@ export default function PatientEditPage() {
           },
         });
       } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Failed to load patient';
-        toast.error(errorMsg);
         router.push('/patients');
       } finally {
         setLoading(false);
@@ -95,11 +92,9 @@ export default function PatientEditPage() {
   const handleSubmit = async (data: PatientFormData) => {
     try {
       await patientService.updatePatient(Number(patientId), data);
-      toast.success('Patient updated successfully!');
       setTimeout(() => router.push('/patients'), 1500);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to update patient';
-      toast.error(errorMsg);
+    } catch {
+      // Toast is handled centrally by patientService.
     }
   };
 

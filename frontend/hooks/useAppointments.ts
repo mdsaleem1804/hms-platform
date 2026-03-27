@@ -1,9 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import appointmentService, { Appointment } from '@/services/appointmentService';
+import appointmentService, {
+  Appointment,
+  AppointmentListParams,
+} from '@/services/appointmentService';
 
-export const useAppointments = () => {
+export const useAppointments = (params: AppointmentListParams = {}) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -11,7 +14,7 @@ export const useAppointments = () => {
   const fetchAppointments = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await appointmentService.getAll();
+      const data = await appointmentService.getAll(params);
       setAppointments(data);
       setError(null);
     } catch (err) {
@@ -20,7 +23,7 @@ export const useAppointments = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [params.q]);
 
   useEffect(() => {
     fetchAppointments();

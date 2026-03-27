@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { usePatients } from '@/hooks/usePatients';
 import PatientsTable from '@/components/tables/PatientsTable';
@@ -8,31 +8,26 @@ import PatientsToolbar from '@/components/patients/PatientsToolbar';
 import PatientsPagination from '@/components/patients/PatientsPagination';
 
 export default function Patients() {
-  const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [gender, setGender] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput.trim());
-      setPage(1);
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setPage(1);
+  };
 
   const query = useMemo(
     () => ({
-      q: debouncedSearch || undefined,
+      q: searchQuery || undefined,
       gender: gender || undefined,
       status: status || undefined,
       page,
       pageSize,
     }),
-    [debouncedSearch, gender, status, page, pageSize]
+    [searchQuery, gender, status, page, pageSize]
   );
 
   const {
@@ -42,6 +37,7 @@ export default function Patients() {
     totalPages,
     totalRecords,
   } = usePatients(query);
+  const safePatients = patients ?? [];
 
   const handleGenderChange = (value: string) => {
     setGender(value);
@@ -59,13 +55,13 @@ export default function Patients() {
   };
 
   const handleExportCsv = () => {
-    if (!patients.length) {
+    if (!safePatients.length) {
       toast.error('No patient records available to export');
       return;
     }
 
     const headers = ['UHID', 'Name', 'Mobile', 'DOB', 'Gender', 'Status'];
-    const rows = patients.map((patient) => [
+    const rows = safePatients.map((patient) => [
       patient.uhid,
       patient.patientName,
       patient.mobile,
@@ -91,7 +87,7 @@ export default function Patients() {
   };
 
   const handleExportPdf = async () => {
-    if (!patients.length) {
+    if (!safePatients.length) {
       toast.error('No patient records available to export');
       return;
     }
@@ -129,7 +125,7 @@ export default function Patients() {
       doc.setFontSize(10);
       doc.setTextColor(90);
       doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 40, y);
-      doc.text(`Page: ${page} | Rows: ${patients.length}`, pageWidth - 180, y, { align: 'left' });
+      doc.text(`Page: ${page} | Rows: ${safePatients.length}`, pageWidth - 180, y, { align: 'left' });
       y += 20;
 
       const headers = ['UHID', 'Name', 'Mobile', 'DOB', 'Gender', 'Status'];
@@ -151,7 +147,7 @@ export default function Patients() {
       y += rowHeight;
 
       doc.setFontSize(10);
-      patients.forEach((patient, index) => {
+      safePatients.forEach((patient, index) => {
         if (y > 560) {
           doc.addPage();
           y = 48;
@@ -185,7 +181,7 @@ export default function Patients() {
   };
 
   const handlePrint = () => {
-    if (!patients.length) {
+    if (!safePatients.length) {
       toast.error('No patient records available to print');
       return;
     }
@@ -204,7 +200,7 @@ export default function Patients() {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 
-    const rows = patients
+    const rows = safePatients
       .map(
         (patient) => `
           <tr>
@@ -234,7 +230,7 @@ export default function Patients() {
         </head>
         <body>
           <h1>Patient List</h1>
-          <p>Generated on ${new Date().toLocaleString('en-IN')} | Page ${page} | Rows ${patients.length}</p>
+          <p>Generated on ${new Date().toLocaleString('en-IN')} | Page ${page} | Rows ${safePatients.length}</p>
           <table>
             <thead>
               <tr>
@@ -268,8 +264,8 @@ export default function Patients() {
       </div>
 
       <PatientsToolbar
-        searchValue={searchInput}
-        onSearchChange={setSearchInput}
+        searchValue={searchQuery}
+        onSearchChange={handleSearchChange}
         genderValue={gender}
         onGenderChange={handleGenderChange}
         statusValue={status}
@@ -290,7 +286,7 @@ export default function Patients() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <PatientsTable patients={patients} />
+          <PatientsTable patients={safePatients} />
           <PatientsPagination
             page={page}
             pageSize={pageSize}

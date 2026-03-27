@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Appointment } from '@/services/appointmentService';
+import { formatAppointmentDate } from '@/lib/appointmentDate';
 
 interface AppointmentsTableProps {
   appointments: Appointment[];
@@ -76,7 +77,7 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
               </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-              {new Date(appointment.appointmentDate).toLocaleDateString()}
+              {formatAppointmentDate(appointment.appointmentDate)}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
               <div className="flex flex-col gap-2 items-start">

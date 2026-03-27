@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<EmergencyContact> EmergencyContacts { get; set; }
     public DbSet<Attender> Attenders { get; set; }
     public DbSet<Referral> Referrals { get; set; }
+    public DbSet<RevenueRate> RevenueRates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -420,6 +421,20 @@ public class AppDbContext : DbContext
                 .WithOne(a => a.Doctor)
                 .HasForeignKey(a => a.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // RevenueRate Configuration
+        modelBuilder.Entity<RevenueRate>(entity =>
+        {
+            entity.ToTable("revenue_rates");
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.Id).HasColumnName("id").HasMaxLength(50);
+            entity.Property(r => r.VisitType).HasColumnName("visit_type").HasMaxLength(50).IsRequired();
+            entity.Property(r => r.Rate).HasColumnName("rate").HasColumnType("numeric(12,2)").IsRequired();
+            entity.Property(r => r.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            entity.Property(r => r.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+            entity.Property(r => r.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
+            entity.HasIndex(r => r.VisitType).IsUnique();
         });
     }
 }

@@ -2,18 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 import AppointmentForm, { AppointmentFormData } from '@/components/forms/AppointmentForm';
 import appointmentService, { AppointmentReminder } from '@/services/appointmentService';
-
-const formatDate = (value: string) => {
-  if (!value) return '';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value.includes('T') ? value.split('T')[0] : value;
-  }
-  return parsed.toISOString().split('T')[0];
-};
+import { notify } from '@/lib/toast';
+import { toAppointmentDateInputValue } from '@/lib/appointmentDate';
 
 const formatTime = (value: string) => {
   if (!value) return '';
@@ -42,7 +34,9 @@ export default function AppointmentEditPage() {
   useEffect(() => {
     const loadAppointment = async () => {
       if (!Number.isFinite(appointmentDisplayId) || appointmentDisplayId <= 0) {
-        toast.error('Invalid appointment number');
+        notify.warning('Invalid appointment number', {
+          id: 'appointment:edit:invalid-number',
+        });
         router.push('/appointments');
         return;
       }
@@ -58,19 +52,17 @@ export default function AppointmentEditPage() {
           patient_id: appointment.patientUhid,
           department: String(appointment.departmentId || ''),
           doctor_id: String(appointment.doctorId || ''),
-          appointment_date: formatDate(appointment.appointmentDate),
+          appointment_date: toAppointmentDateInputValue(appointment.appointmentDate),
           start_time: formatTime(appointment.startTime),
-            end_time: formatTime(appointment.endTime),
+          end_time: formatTime(appointment.endTime),
           visit_type: appointment.visitType,
-          notes: appointment.notes,
-          priority: appointment.priority,
-          status: appointment.status,
+          notes: appointment.notes || '',
+          priority: appointment.priority || 'normal',
+          status: appointment.status || 'scheduled',
           token_number: appointment.tokenNumber ? String(appointment.tokenNumber) : '',
           reminders: mapRemindersToForm(appointment.reminders || []),
         });
       } catch (error: any) {
-        const message = error.response?.data?.message || error.message || 'Failed to load appointment details';
-        toast.error(message);
         router.push('/appointments');
       } finally {
         setIsLoading(false);
@@ -83,7 +75,9 @@ export default function AppointmentEditPage() {
   const handleSubmit = async (data: AppointmentFormData) => {
     try {
       if (!appointmentId) {
-        toast.error('Appointment record not loaded');
+        notify.warning('Appointment record not loaded', {
+          id: 'appointment:edit:not-loaded',
+        });
         return;
       }
 
@@ -105,11 +99,9 @@ export default function AppointmentEditPage() {
         })),
       });
 
-      toast.success('Appointment updated successfully');
       router.push('/appointments');
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Failed to update appointment';
-      toast.error(message);
+    } catch {
+      // Toast is handled centrally by appointmentService.
     } finally {
       setIsSubmitting(false);
     }

@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 import patientService, { PatientResponse } from '@/services/patientService';
+import { notify } from '@/lib/toast';
 
 export default function PatientDetailsPage() {
   const params = useParams();
@@ -12,6 +12,7 @@ export default function PatientDetailsPage() {
   const patientId = Number(params?.id);
   const [patient, setPatient] = useState<PatientResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -21,7 +22,7 @@ export default function PatientDetailsPage() {
         setPatient(data);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Failed to load patient details';
-        toast.error(message);
+        notify.error(message, { id: 'patient:detail:load:error' });
         router.push('/patients');
       } finally {
         setLoading(false);
@@ -29,7 +30,7 @@ export default function PatientDetailsPage() {
     };
 
     if (!Number.isFinite(patientId) || patientId <= 0) {
-      toast.error('Invalid patient id');
+      notify.warning('Invalid patient id', { id: 'patient:detail:invalid-id' });
       router.push('/patients');
       return;
     }
@@ -37,15 +38,39 @@ export default function PatientDetailsPage() {
     load();
   }, [patientId, router]);
 
+  const handleDeletePatient = async () => {
+    if (!patient || isDeleting) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete patient ${patient.patientName}? This action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await patientService.deletePatient(patient.id);
+      router.push('/patients');
+    } catch {
+      // Toast is handled centrally by patientService.
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const details = useMemo(() => {
     if (!patient) return [];
     return [
-      { label: 'UHID', value: patient.uhid },
-      { label: 'Name', value: patient.patientName },
-      { label: 'Mobile', value: patient.mobile },
-      { label: 'DOB', value: new Date(patient.dob).toLocaleDateString('en-IN') },
-      { label: 'Gender', value: patient.gender },
-      { label: 'Status', value: patient.status },
+      { label: 'UHID', value: patient.uhid || '-' },
+      { label: 'Name', value: patient.patientName || '-' },
+      { label: 'Mobile', value: patient.mobile || '-' },
+      { label: 'DOB', value: patient.dob ? new Date(patient.dob).toLocaleDateString('en-IN') : '-' },
+      { label: 'Gender', value: patient.gender || '-' },
+      { label: 'Status', value: patient.status || '-' },
       { label: 'Email', value: patient.email || '-' },
       { label: 'Address', value: patient.address || '-' },
     ];
@@ -83,6 +108,14 @@ export default function PatientDetailsPage() {
           >
             Edit Patient
           </Link>
+          <button
+            type="button"
+            onClick={handleDeletePatient}
+            disabled={isDeleting}
+            className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isDeleting ? 'Deleting...' : 'Delete Patient'}
+          </button>
         </div>
       </div>
 

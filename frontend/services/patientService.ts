@@ -1,4 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
+import { debugApiResponse, mapPatient, mapPatientSummary } from '@/lib/apiMappers';
+import { handleApiError, handleApiResponse } from '@/lib/apiFeedback';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7000';
 
@@ -156,6 +158,7 @@ export interface PatientServiceType {
   getPatients(params?: PatientListParams): Promise<PagedPatientResult>;
   getPatientById(id: number): Promise<PatientResponse>;
   updatePatient(id: number, data: CreatePatientPayload): Promise<PatientResponse>;
+  deletePatient(id: number): Promise<void>;
   searchPatients(query: string, limit?: number): Promise<PatientSummary[]>;
 }
 
@@ -174,7 +177,7 @@ const normalizePagedPatients = (
     const pageSize = params.pageSize ?? 10;
     const totalRecords = payload.length;
     return {
-      items: payload as PatientResponse[],
+      items: payload.map((item) => mapPatient(item) as PatientResponse),
       page,
       pageSize,
       totalRecords,
@@ -183,7 +186,10 @@ const normalizePagedPatients = (
   }
 
   const data = (payload ?? {}) as Record<string, unknown>;
-  const items = (data.items ?? data.Items ?? []) as PatientResponse[];
+  const rawItems = data.items ?? data.Items ?? [];
+  const items = Array.isArray(rawItems)
+    ? rawItems.map((item) => mapPatient(item) as PatientResponse)
+    : [];
   const page = toNumber(data.page ?? data.Page, params.page ?? 1);
   const pageSize = toNumber(data.pageSize ?? data.PageSize, params.pageSize ?? 10);
   const totalRecords = toNumber(data.totalRecords ?? data.TotalRecords, items.length);
@@ -205,13 +211,19 @@ const patientService: PatientServiceType = {
   async createPatient(data: CreatePatientPayload): Promise<PatientResponse> {
     try {
       const response = await apiClient.post<ApiResponse<PatientResponse>>('/api/patients', data);
-      return response.data.data;
+      debugApiResponse('patients.create', response.data);
+      handleApiResponse(response, {
+        successToastId: 'patient:create:success',
+        errorToastId: 'patient:create:error',
+        includeUhidOnSuccess: true,
+      });
+      return mapPatient(response.data?.data) as PatientResponse;
     } catch (error) {
-      throw new Error(
-        axios.isAxiosError(error)
-          ? error.response?.data?.message || error.message
-          : 'Failed to create patient'
-      );
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to create patient',
+        toastId: 'patient:create:error',
+      });
+      throw new Error(message);
     }
   },
 
@@ -220,39 +232,64 @@ const patientService: PatientServiceType = {
       const response = await apiClient.get<ApiResponse<PagedPatientResult>>('/api/patients', {
         params,
       });
-      return normalizePagedPatients(response.data.data, params);
+      debugApiResponse('patients.list', response.data);
+      return normalizePagedPatients(response.data?.data, params);
     } catch (error) {
-      throw new Error(
-        axios.isAxiosError(error)
-          ? error.response?.data?.message || error.message
-          : 'Failed to fetch patients'
-      );
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch patients',
+        toastId: 'patient:list:error',
+      });
+      throw new Error(message);
     }
   },
 
   async getPatientById(id: number): Promise<PatientResponse> {
     try {
       const response = await apiClient.get<ApiResponse<PatientResponse>>(`/api/patients/${id}`);
-      return response.data.data;
+      debugApiResponse('patients.detail', response.data);
+      return mapPatient(response.data?.data) as PatientResponse;
     } catch (error) {
-      throw new Error(
-        axios.isAxiosError(error)
-          ? error.response?.data?.message || error.message
-          : 'Failed to fetch patient'
-      );
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch patient',
+        toastId: 'patient:detail:error',
+      });
+      throw new Error(message);
     }
   },
 
   async updatePatient(id: number, data: CreatePatientPayload): Promise<PatientResponse> {
     try {
       const response = await apiClient.put<ApiResponse<PatientResponse>>(`/api/patients/${id}`, data);
-      return response.data.data;
+      debugApiResponse('patients.update', response.data);
+      handleApiResponse(response, {
+        successToastId: 'patient:update:success',
+        errorToastId: 'patient:update:error',
+      });
+      return mapPatient(response.data?.data) as PatientResponse;
     } catch (error) {
-      throw new Error(
-        axios.isAxiosError(error)
-          ? error.response?.data?.message || error.message
-          : 'Failed to update patient'
-      );
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to update patient',
+        toastId: 'patient:update:error',
+      });
+      throw new Error(message);
+    }
+  },
+
+  async deletePatient(id: number): Promise<void> {
+    try {
+      const response = await apiClient.delete<ApiResponse<null>>(`/api/patients/${id}`);
+      debugApiResponse('patients.delete', response.data);
+      handleApiResponse(response, {
+        successMessage: 'Patient deleted successfully',
+        successToastId: 'patient:delete:success',
+        errorToastId: 'patient:delete:error',
+      });
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to delete patient',
+        toastId: 'patient:delete:error',
+      });
+      throw new Error(message);
     }
   },
 
@@ -261,13 +298,15 @@ const patientService: PatientServiceType = {
       const response = await apiClient.get<ApiResponse<PatientSummary[]>>('/api/patients/search', {
         params: { q: query, limit },
       });
-      return response.data.data;
+      debugApiResponse('patients.search', response.data);
+      const list = Array.isArray(response.data?.data) ? response.data.data : [];
+      return list.map((item) => mapPatientSummary(item) as PatientSummary);
     } catch (error) {
-      throw new Error(
-        axios.isAxiosError(error)
-          ? error.response?.data?.message || error.message
-          : 'Failed to search patients'
-      );
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to search patients',
+        toastId: 'patient:search:error',
+      });
+      throw new Error(message);
     }
   },
 };

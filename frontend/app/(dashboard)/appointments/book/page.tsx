@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
 import AppointmentForm, { AppointmentFormData } from '@/components/forms/AppointmentForm';
 import appointmentService from '@/services/appointmentService';
 import patientService from '@/services/patientService';
+import { notify } from '@/lib/toast';
 
 export default function AppointmentBookingPage() {
   const router = useRouter();
@@ -33,7 +33,9 @@ export default function AppointmentBookingPage() {
           patient_id: patient.uhid,
         });
       } catch {
-        toast.error('Unable to pre-fill patient details');
+        notify.warning('Unable to pre-fill patient details', {
+          id: 'appointment:prefill:warning',
+        });
         setInitialData(undefined);
       } finally {
         setIsPrefillLoading(false);
@@ -46,7 +48,7 @@ export default function AppointmentBookingPage() {
   const handleSubmit = async (data: AppointmentFormData) => {
     try {
       setIsSubmitting(true);
-      const appointment = await appointmentService.create({
+      await appointmentService.create({
         patientId: data.patient_record_id,
         doctorId: String(data.doctor_id),
         departmentId: String(data.department),
@@ -63,11 +65,9 @@ export default function AppointmentBookingPage() {
         })),
       });
 
-      toast.success(`Appointment ${appointment.appointmentNo} booked successfully`);
       router.push('/appointments');
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Failed to book appointment';
-      toast.error(message);
+    } catch {
+      // Toast is handled centrally by appointmentService.
     } finally {
       setIsSubmitting(false);
     }

@@ -1,4 +1,6 @@
 import { apiClient } from '@/lib/api';
+import { debugApiResponse, mapAppointment } from '@/lib/apiMappers';
+import { handleApiError, handleApiResponse } from '@/lib/apiFeedback';
 
 export interface AppointmentReminder {
   id: string;
@@ -49,30 +51,92 @@ export interface CreateAppointmentRequest {
   reminders: CreateAppointmentReminderRequest[];
 }
 
+export interface AppointmentListParams {
+  q?: string;
+}
+
 class AppointmentService {
-  async getAll(): Promise<Appointment[]> {
-    const response = await apiClient.get<any>('/api/appointments');
-    return response.data.data || [];
+  async getAll(params: AppointmentListParams = {}): Promise<Appointment[]> {
+    try {
+      const response = await apiClient.get<any>('/api/appointments', {
+        params: {
+          q: params.q || undefined,
+        },
+      });
+      debugApiResponse('appointments.list', response.data);
+      const items = Array.isArray(response.data?.data) ? response.data.data : [];
+      return items.map((item: unknown) => mapAppointment(item) as Appointment);
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch appointments',
+        toastId: 'appointment:list:error',
+      });
+      throw new Error(message);
+    }
   }
 
   async getById(id: string): Promise<Appointment> {
-    const response = await apiClient.get<any>(`/api/appointments/${id}`);
-    return response.data.data;
+    try {
+      const response = await apiClient.get<any>(`/api/appointments/${id}`);
+      debugApiResponse('appointments.detail', response.data);
+      return mapAppointment(response.data?.data) as Appointment;
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch appointment details',
+        toastId: 'appointment:detail:error',
+      });
+      throw new Error(message);
+    }
   }
 
   async getByDisplayId(displayId: number): Promise<Appointment> {
-    const response = await apiClient.get<any>(`/api/appointments/by-number/${displayId}`);
-    return response.data.data;
+    try {
+      const response = await apiClient.get<any>(`/api/appointments/by-number/${displayId}`);
+      debugApiResponse('appointments.detailByNumber', response.data);
+      return mapAppointment(response.data?.data) as Appointment;
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch appointment details',
+        toastId: 'appointment:detail:error',
+      });
+      throw new Error(message);
+    }
   }
 
   async create(request: CreateAppointmentRequest): Promise<Appointment> {
-    const response = await apiClient.post<any>('/api/appointments', request);
-    return response.data.data;
+    try {
+      const response = await apiClient.post<any>('/api/appointments', request);
+      debugApiResponse('appointments.create', response.data);
+      handleApiResponse(response, {
+        successToastId: 'appointment:create:success',
+        errorToastId: 'appointment:create:error',
+      });
+      return mapAppointment(response.data?.data) as Appointment;
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to create appointment',
+        toastId: 'appointment:create:error',
+      });
+      throw new Error(message);
+    }
   }
 
   async update(id: string, request: CreateAppointmentRequest): Promise<Appointment> {
-    const response = await apiClient.put<any>(`/api/appointments/${id}`, request);
-    return response.data.data;
+    try {
+      const response = await apiClient.put<any>(`/api/appointments/${id}`, request);
+      debugApiResponse('appointments.update', response.data);
+      handleApiResponse(response, {
+        successToastId: 'appointment:update:success',
+        errorToastId: 'appointment:update:error',
+      });
+      return mapAppointment(response.data?.data) as Appointment;
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to update appointment',
+        toastId: 'appointment:update:error',
+      });
+      throw new Error(message);
+    }
   }
 }
 

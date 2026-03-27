@@ -1,32 +1,329 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
+import { Activity, CalendarDays, IndianRupee, Save, Users } from 'lucide-react';
+import dashboardService, {
+  AppointmentStatusMetric,
+  DashboardMetrics,
+  DailyTrendPoint,
+  RevenueRate,
+} from '@/services/dashboardService';
+import { notify } from '@/lib/toast';
+
+const STATUS_COLORS = ['bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-violet-500', 'bg-cyan-500'];
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount || 0);
+};
+
+const toLabel = (value: string) => {
+  if (!value) return 'Unknown';
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+function SummaryCard({
+  title,
+  value,
+  hint,
+  icon,
+}: {
+  title: string;
+  value: string;
+  hint: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <article className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <p className="mt-3 text-3xl font-bold tracking-tight text-gray-900">{value}</p>
+          <p className="mt-2 text-xs text-gray-500">{hint}</p>
+        </div>
+        <div className="rounded-lg bg-blue-50 p-2 text-blue-700">{icon}</div>
+      </div>
+    </article>
+  );
+}
+
+function StatusBreakdownChart({ items }: { items: AppointmentStatusMetric[] }) {
+  const total = items.reduce((sum, item) => sum + item.count, 0);
+
+  if (!items.length) {
+    return <p className="text-sm text-gray-500">No appointments recorded for today.</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {items.map((item, index) => {
+        const percentage = total > 0 ? Math.round((item.count / total) * 100) : 0;
+        return (
+          <div key={item.status}>
+            <div className="mb-1 flex items-center justify-between text-sm">
+              <span className="font-medium text-gray-700">{toLabel(item.status)}</span>
+              <span className="text-gray-500">{item.count} ({percentage}%)</span>
+            </div>
+            <div className="h-2 rounded-full bg-gray-100">
+              <div
+                className={`h-2 rounded-full ${STATUS_COLORS[index % STATUS_COLORS.length]}`}
+                style={{ width: `${percentage}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function DailyTrendsChart({ points }: { points: DailyTrendPoint[] }) {
+  const max = points.reduce(
+    (acc, point) => Math.max(acc, point.patients, point.appointments),
+    0
+  );
+
+  if (!points.length) {
+    return <p className="text-sm text-gray-500">No trend data available.</p>;
+  }
+
+  const scale = max > 0 ? max : 1;
+
+  return (
+    <div className="space-y-3">
+      {points.map((point) => {
+        const label = new Date(point.date).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+        });
+
+        return (
+          <div key={point.date} className="grid grid-cols-[70px,1fr] items-center gap-3">
+            <span className="text-xs font-medium text-gray-500">{label}</span>
+            <div>
+              <div className="mb-1 flex items-center gap-2">
+                <div className="h-2 rounded bg-blue-500" style={{ width: `${(point.patients / scale) * 100}%` }} />
+                <span className="text-xs text-gray-600">Patients {point.patients}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-2 rounded bg-emerald-500" style={{ width: `${(point.appointments / scale) * 100}%` }} />
+                <span className="text-xs text-gray-600">Appointments {point.appointments}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RevenueRatesEditor({
+  rates,
+  onRateChange,
+  onSave,
+  isSaving,
+}: {
+  rates: RevenueRate[];
+  onRateChange: (visitType: string, value: string) => void;
+  onSave: () => void;
+  isSaving: boolean;
+}) {
+  return (
+    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Revenue Rate Settings</h2>
+          <p className="mt-1 text-xs text-gray-500">Admin configurable rates used for Revenue Today calculation.</p>
+        </div>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={isSaving || rates.length === 0}
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Save size={14} />
+          {isSaving ? 'Saving...' : 'Save Rates'}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {rates.map((rate) => (
+          <label key={rate.visitType} className="rounded-lg border border-gray-200 p-3">
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+              {toLabel(rate.visitType)}
+            </span>
+            <input
+              type="number"
+              min={0}
+              step="1"
+              value={Number.isFinite(rate.rate) ? rate.rate : 0}
+              onChange={(event) => onRateChange(rate.visitType, event.target.value)}
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </label>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function Dashboard() {
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [revenueRates, setRevenueRates] = useState<RevenueRate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSavingRates, setIsSavingRates] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadMetrics = async () => {
+      try {
+        setLoading(true);
+        const [metricsResult, ratesResult] = await Promise.all([
+          dashboardService.getMetrics(7),
+          dashboardService.getRevenueRates(),
+        ]);
+
+        if (!isMounted) return;
+        setMetrics(metricsResult);
+        setRevenueRates(ratesResult);
+        setError('');
+      } catch (e) {
+        if (!isMounted) return;
+        setError(e instanceof Error ? e.message : 'Failed to load dashboard metrics');
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const refreshMetricsOnly = async () => {
+      try {
+        const latest = await dashboardService.getMetrics(7);
+        if (!isMounted) return;
+        setMetrics(latest);
+      } catch {
+        // Skip silent refresh errors to avoid interrupting dashboard usage.
+      }
+    };
+
+    loadMetrics();
+    const timer = window.setInterval(refreshMetricsOnly, 60000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const summary = metrics?.summary;
+  const statusBreakdown = metrics?.appointmentStatusBreakdown ?? [];
+  const dailyTrends = metrics?.dailyTrends ?? [];
+
+  const totalTrendAppointments = useMemo(
+    () => dailyTrends.reduce((sum, point) => sum + point.appointments, 0),
+    [dailyTrends]
+  );
+
+  const handleRateChange = (visitType: string, value: string) => {
+    const numericValue = Number(value);
+    setRevenueRates((current) =>
+      current.map((rate) =>
+        rate.visitType === visitType
+          ? { ...rate, rate: Number.isFinite(numericValue) ? Math.max(0, numericValue) : 0 }
+          : rate
+      )
+    );
+  };
+
+  const handleSaveRates = async () => {
+    try {
+      setIsSavingRates(true);
+      const updatedRates = await dashboardService.updateRevenueRates(revenueRates);
+      setRevenueRates(updatedRates);
+
+      const latestMetrics = await dashboardService.getMetrics(7);
+      setMetrics(latestMetrics);
+
+      notify.success('Revenue rates updated', { id: 'dashboard:revenue-rates:save' });
+    } catch (e) {
+      notify.error(
+        e instanceof Error ? e.message : 'Failed to save revenue rates',
+        { id: 'dashboard:revenue-rates:error' }
+      );
+    } finally {
+      setIsSavingRates(false);
+    }
+  };
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-gray-500 text-sm font-medium">Total Patients</div>
-          <div className="mt-2 text-3xl font-bold">1,234</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-gray-500 text-sm font-medium">Today Appointments</div>
-          <div className="mt-2 text-3xl font-bold">28</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-gray-500 text-sm font-medium">Doctors Active</div>
-          <div className="mt-2 text-3xl font-bold">15</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-gray-500 text-sm font-medium">Pending Visits</div>
-          <div className="mt-2 text-3xl font-bold">8</div>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Hospital Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">Live operational metrics for front-desk and care teams.</p>
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-        <p className="text-gray-500">Dashboard content placeholder</p>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <SummaryCard
+          title="Today's Patients"
+          value={loading ? '...' : String(summary?.todaysPatients ?? 0)}
+          hint="New registrations created today"
+          icon={<Users size={18} />}
+        />
+        <SummaryCard
+          title="Today's Appointments"
+          value={loading ? '...' : String(summary?.todaysAppointments ?? 0)}
+          hint="Total appointments scheduled for today"
+          icon={<CalendarDays size={18} />}
+        />
+        <SummaryCard
+          title="Revenue Today"
+          value={loading ? '...' : formatCurrency(summary?.revenueToday ?? 0)}
+          hint="Estimated from today's appointment visit types"
+          icon={<IndianRupee size={18} />}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Appointment Status Breakdown</h2>
+            <Activity size={16} className="text-gray-400" />
+          </div>
+          <StatusBreakdownChart items={statusBreakdown} />
+        </section>
+
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Daily Trends (Last 7 Days)</h2>
+            <span className="text-xs text-gray-500">Appointments total: {totalTrendAppointments}</span>
+          </div>
+          <DailyTrendsChart points={dailyTrends} />
+        </section>
+      </div>
+
+      <div className="mt-6">
+        <RevenueRatesEditor
+          rates={revenueRates}
+          onRateChange={handleRateChange}
+          onSave={handleSaveRates}
+          isSaving={isSavingRates}
+        />
       </div>
     </>
   );

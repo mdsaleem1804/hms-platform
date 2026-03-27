@@ -1,5 +1,6 @@
 using HMS.Application.Features.Patients;
 using HMS.Application.Features.Appointments;
+using HMS.Application.Features.Dashboard;
 using HMS.Application.Features.Departments;
 using HMS.Application.Features.Doctors;
 using HMS.Application.Repositories;
@@ -22,6 +23,11 @@ public static class ServiceExtensions
         // Appointment Services
         services.AddScoped<IAppointmentService, AppointmentService>();
         services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+
+        // Dashboard Metrics Services
+        services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IDashboardMetricsRepository, DashboardMetricsRepository>();
+        services.AddScoped<IRevenueRateRepository, RevenueRateRepository>();
 
         // Department Services
         services.AddScoped<IDepartmentService, DepartmentService>();
