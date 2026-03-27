@@ -17,4 +17,5 @@ public class Appointment : BaseEntity
 
     public Patient? Patient { get; set; }
     public Doctor? Doctor { get; set; }
+    public ICollection<AppointmentReminder> Reminders { get; set; } = new List<AppointmentReminder>();
 }

@@ -1,3 +1,4 @@
+using HMS.Application.Features.Appointments;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HMS.API.Controllers;
@@ -7,125 +8,88 @@ namespace HMS.API.Controllers;
 public class AppointmentsController : ControllerBase
 {
     private readonly IAppointmentService _appointmentService;
+    private readonly ILogger<AppointmentsController> _logger;
 
-    public AppointmentsController(IAppointmentService appointmentService)
+    public AppointmentsController(IAppointmentService appointmentService, ILogger<AppointmentsController> logger)
     {
         _appointmentService = appointmentService;
+        _logger = logger;
     }
 
     [HttpGet]
-    public async Task<ApiResponse<List<AppointmentDto>>> GetAll()
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<AppointmentDto>>>> GetAll()
     {
+        _logger.LogInformation("Fetching all appointments");
         var appointments = await _appointmentService.GetAllAppointmentsAsync();
-        return ApiResponse<List<AppointmentDto>>.SuccessResponse(appointments, "Appointments retrieved successfully");
+        return Ok(ApiResponse<List<AppointmentDto>>.SuccessResponse(appointments, "Appointments retrieved successfully"));
     }
 
     [HttpGet("{id}")]
-    public async Task<ApiResponse<AppointmentDto>> GetById(string id)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<AppointmentDto>>> GetById(string id)
     {
+        _logger.LogInformation("Fetching appointment with ID: {AppointmentId}", id);
         var appointment = await _appointmentService.GetAppointmentByIdAsync(id);
-        return appointment == null
-            ? ApiResponse<AppointmentDto>.FailureResponse("Appointment not found")
-            : ApiResponse<AppointmentDto>.SuccessResponse(appointment);
+        if (appointment == null)
+        {
+            throw new KeyNotFoundException($"Appointment with ID {id} not found");
+        }
+
+        return Ok(ApiResponse<AppointmentDto>.SuccessResponse(appointment, "Appointment retrieved successfully"));
     }
 
     [HttpPost]
-    public async Task<ApiResponse<AppointmentDto>> Create([FromBody] CreateAppointmentDto dto)
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<AppointmentDto>>> Create([FromBody] CreateAppointmentDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            throw new ArgumentException("Invalid request data");
+        }
+
         var appointment = await _appointmentService.CreateAppointmentAsync(dto);
-        return ApiResponse<AppointmentDto>.SuccessResponse(appointment, "Appointment created successfully");
+        _logger.LogInformation("Appointment created successfully with ID: {AppointmentId}", appointment.Id);
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = appointment.Id },
+            ApiResponse<AppointmentDto>.SuccessResponse(appointment, "Appointment created successfully")
+        );
     }
 
     [HttpPut("{id}")]
-    public async Task<ApiResponse<AppointmentDto>> Update(string id, [FromBody] UpdateAppointmentDto dto)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<AppointmentDto>>> Update(string id, [FromBody] UpdateAppointmentDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            throw new ArgumentException("Invalid request data");
+        }
+
         var appointment = await _appointmentService.UpdateAppointmentAsync(id, dto);
-        return appointment == null
-            ? ApiResponse<AppointmentDto>.FailureResponse("Appointment not found")
-            : ApiResponse<AppointmentDto>.SuccessResponse(appointment, "Appointment updated successfully");
+        _logger.LogInformation("Appointment updated successfully with ID: {AppointmentId}", id);
+        return Ok(ApiResponse<AppointmentDto>.SuccessResponse(appointment, "Appointment updated successfully"));
     }
 
     [HttpDelete("{id}")]
-    public async Task<ApiResponse<bool>> Delete(string id)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object?>>> Delete(string id)
     {
-        var success = await _appointmentService.DeleteAppointmentAsync(id);
-        return success
-            ? ApiResponse<bool>.SuccessResponse(true, "Appointment deleted successfully")
-            : ApiResponse<bool>.FailureResponse("Appointment not found");
+        await _appointmentService.DeleteAppointmentAsync(id);
+        _logger.LogInformation("Appointment deleted successfully with ID: {AppointmentId}", id);
+        return Ok(ApiResponse<object?>.SuccessResponse(null, "Appointment deleted successfully"));
     }
-}
-
-public interface IAppointmentService
-{
-    Task<List<AppointmentDto>> GetAllAppointmentsAsync();
-    Task<AppointmentDto?> GetAppointmentByIdAsync(string id);
-    Task<AppointmentDto> CreateAppointmentAsync(CreateAppointmentDto dto);
-    Task<AppointmentDto?> UpdateAppointmentAsync(string id, UpdateAppointmentDto dto);
-    Task<bool> DeleteAppointmentAsync(string id);
-}
-
-public class AppointmentService : IAppointmentService
-{
-    public async Task<List<AppointmentDto>> GetAllAppointmentsAsync()
-    {
-        // TODO: Implement using repository
-        return await Task.FromResult(new List<AppointmentDto>());
-    }
-
-    public async Task<AppointmentDto?> GetAppointmentByIdAsync(string id)
-    {
-        // TODO: Implement using repository
-        return await Task.FromResult<AppointmentDto?>(null);
-    }
-
-    public async Task<AppointmentDto> CreateAppointmentAsync(CreateAppointmentDto dto)
-    {
-        // TODO: Implement business logic
-        return await Task.FromResult(new AppointmentDto());
-    }
-
-    public async Task<AppointmentDto?> UpdateAppointmentAsync(string id, UpdateAppointmentDto dto)
-    {
-        // TODO: Implement business logic
-        return await Task.FromResult<AppointmentDto?>(null);
-    }
-
-    public async Task<bool> DeleteAppointmentAsync(string id)
-    {
-        // TODO: Implement using repository
-        return await Task.FromResult(false);
-    }
-}
-
-public class AppointmentDto
-{
-    public string Id { get; set; } = string.Empty;
-    public string AppointmentNo { get; set; } = string.Empty;
-    public string PatientId { get; set; } = string.Empty;
-    public string DoctorId { get; set; } = string.Empty;
-    public DateTime AppointmentDate { get; set; }
-    public TimeSpan StartTime { get; set; }
-    public TimeSpan EndTime { get; set; }
-    public int TokenNumber { get; set; }
-    public string Status { get; set; } = "Scheduled";
-    public string VisitType { get; set; } = string.Empty;
-}
-
-public class CreateAppointmentDto
-{
-    public string PatientId { get; set; } = string.Empty;
-    public string DoctorId { get; set; } = string.Empty;
-    public DateTime AppointmentDate { get; set; }
-    public TimeSpan StartTime { get; set; }
-    public TimeSpan EndTime { get; set; }
-    public string VisitType { get; set; } = string.Empty;
-}
-
-public class UpdateAppointmentDto
-{
-    public DateTime AppointmentDate { get; set; }
-    public TimeSpan StartTime { get; set; }
-    public TimeSpan EndTime { get; set; }
-    public string Status { get; set; } = string.Empty;
 }
 

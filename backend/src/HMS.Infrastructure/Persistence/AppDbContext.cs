@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<Department> Departments { get; set; }
     public DbSet<Doctor> Doctors { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
+    public DbSet<AppointmentReminder> AppointmentReminders { get; set; }
     public DbSet<EmergencyContact> EmergencyContacts { get; set; }
     public DbSet<Attender> Attenders { get; set; }
     public DbSet<Referral> Referrals { get; set; }
@@ -232,7 +233,8 @@ public class AppDbContext : DbContext
                 .HasColumnName("doctor_id");
 
             entity.Property(a => a.AppointmentDate)
-                .HasColumnName("appointment_date");
+                .HasColumnName("appointment_date")
+                .HasColumnType("date");
 
             entity.Property(a => a.StartTime)
                 .HasColumnName("start_time");
@@ -250,6 +252,22 @@ public class AppDbContext : DbContext
             entity.Property(a => a.VisitType)
                 .HasColumnName("visit_type");
 
+            entity.Property(a => a.Department)
+                .HasColumnName("department")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(a => a.Priority)
+                .HasColumnName("priority")
+                .HasMaxLength(20)
+                .HasDefaultValue("normal")
+                .IsRequired();
+
+            entity.Property(a => a.Notes)
+                .HasColumnName("notes")
+                .HasDefaultValue(string.Empty)
+                .IsRequired();
+
             entity.Property(a => a.CreatedAt)
                 .HasColumnName("created_at")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -263,6 +281,37 @@ public class AppDbContext : DbContext
             entity.HasIndex(a => a.Status);
 
             // Foreign key already configured in Patient entity
+        });
+
+        modelBuilder.Entity<AppointmentReminder>(entity =>
+        {
+            entity.ToTable("appointment_reminders");
+            entity.HasKey(reminder => reminder.Id);
+
+            entity.Property(reminder => reminder.Id)
+                .HasColumnName("id")
+                .ValueGeneratedNever();
+
+            entity.Property(reminder => reminder.AppointmentId)
+                .HasColumnName("appointment_id")
+                .IsRequired();
+
+            entity.Property(reminder => reminder.Channel)
+                .HasColumnName("channel")
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(reminder => reminder.Timing)
+                .HasColumnName("timing")
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.HasIndex(reminder => reminder.AppointmentId);
+
+            entity.HasOne(reminder => reminder.Appointment)
+                .WithMany(appointment => appointment.Reminders)
+                .HasForeignKey(reminder => reminder.AppointmentId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Department Configuration

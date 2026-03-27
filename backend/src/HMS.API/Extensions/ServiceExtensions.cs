@@ -1,4 +1,5 @@
 using HMS.Application.Features.Patients;
+using HMS.Application.Features.Appointments;
 using HMS.Application.Features.Departments;
 using HMS.Application.Features.Doctors;
 using HMS.Application.Repositories;
@@ -18,6 +19,10 @@ public static class ServiceExtensions
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IPatientRepository, PatientRepository>();
 
+        // Appointment Services
+        services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+
         // Department Services
         services.AddScoped<IDepartmentService, DepartmentService>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
@@ -31,10 +36,6 @@ public static class ServiceExtensions
         configuration.GetSection("UhidGenerator").Bind(uhidOptions);
         
         RegisterUhidGenerator(services, uhidOptions);
-
-        // Future: Appointment Services
-        // services.AddScoped<IAppointmentService, AppointmentService>();
-
         return services;
     }
 

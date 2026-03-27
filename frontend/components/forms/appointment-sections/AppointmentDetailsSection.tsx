@@ -12,11 +12,14 @@ import patientService, { PatientSummary } from '@/services/patientService';
 
 interface AppointmentDetailsSectionProps {
   formData: {
+    patient_record_id: number;
     patient_name: string;
     patient_id: string;
     department: string;
     doctor_id: string;
     appointment_date: string;
+    start_time: string;
+    end_time: string;
     visit_type: string;
     notes: string;
     priority: string;
@@ -163,6 +166,10 @@ const AppointmentDetailsSection = memo(({
     setQuery(val);
     setShowDropdown(true);
 
+    if (formData.patient_record_id && val !== formData.patient_name) {
+      onPatientSelect({ id: 0, uhid: '', patientName: '', dob: '', age: 0, gender: '', bloodGroup: '', mobile: '' });
+    }
+
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (val.trim().length < 2) {
@@ -182,7 +189,7 @@ const AppointmentDetailsSection = memo(({
         setIsSearching(false);
       }
     }, 350);
-  }, []);
+  }, [formData.patient_name, formData.patient_record_id, onPatientSelect]);
 
   const handleSelect = useCallback((patient: PatientSummary) => {
     setQuery(patient.patientName);
@@ -392,6 +399,42 @@ const AppointmentDetailsSection = memo(({
           />
           {errors.appointment_date && (
             <p className="mt-1 text-xs text-red-500">{errors.appointment_date}</p>
+          )}
+        </div>
+
+        <div className="col-span-12 sm:col-span-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Start Time <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="time"
+            name="start_time"
+            value={formData.start_time}
+            onChange={onInputChange}
+            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              errors.start_time ? 'border-red-400 bg-red-50' : 'border-gray-300'
+            }`}
+          />
+          {errors.start_time && (
+            <p className="mt-1 text-xs text-red-500">{errors.start_time}</p>
+          )}
+        </div>
+
+        <div className="col-span-12 sm:col-span-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            End Time <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="time"
+            name="end_time"
+            value={formData.end_time}
+            onChange={onInputChange}
+            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              errors.end_time ? 'border-red-400 bg-red-50' : 'border-gray-300'
+            }`}
+          />
+          {errors.end_time && (
+            <p className="mt-1 text-xs text-red-500">{errors.end_time}</p>
           )}
         </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import AppointmentDetailsSection from './appointment-sections/AppointmentDetailsSection';
 import RemindersSection, { Reminder } from './appointment-sections/RemindersSection';
 import Tabs from '../ui/Tabs';
@@ -8,11 +8,14 @@ import { PatientSummary } from '@/services/patientService';
 
 export interface AppointmentFormData {
   // Details
+  patient_record_id: number;
   patient_name: string;
   patient_id: string;
   department: string;
   doctor_id: string;
   appointment_date: string;
+  start_time: string;
+  end_time: string;
   visit_type: string;
   // Status & Priority
   notes: string;
@@ -33,11 +36,14 @@ export interface AppointmentFormProps {
 }
 
 const defaultFormData: AppointmentFormData = {
+  patient_record_id: 0,
   patient_name: '',
   patient_id: '',
   department: '',
   doctor_id: '',
   appointment_date: '',
+  start_time: '',
+  end_time: '',
   visit_type: 'consultation',
   notes: '',
   priority: 'normal',
@@ -64,15 +70,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   // Merge external + local errors
   const allErrors = { ...externalErrors, ...errors };
 
-  // Auto-generate token number on create mode (once)
-  useEffect(() => {
-    if (mode === 'create' && !formData.token_number) {
-      const token = `TKN-${Date.now().toString().slice(-6)}`;
-      setFormData(prev => ({ ...prev, token_number: token }));
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleInputChange = useCallback((
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -86,10 +83,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const handlePatientSelect = useCallback((patient: PatientSummary) => {
     setFormData(prev => ({
       ...prev,
+      patient_record_id: patient.id,
       patient_name: patient.patientName,
       patient_id: patient.uhid,
     }));
-    setErrors(prev => ({ ...prev, patient_name: '' }));
+    setErrors(prev => ({ ...prev, patient_name: '', patient_record_id: '' }));
   }, []);
 
   const handleAddReminder = useCallback(() => {
@@ -121,10 +119,15 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!formData.patient_name.trim()) newErrors.patient_name = 'Patient name is required';
+    if (!formData.patient_record_id) newErrors.patient_name = 'Select a patient from the search results';
     if (!formData.department) newErrors.department = 'Department is required';
     if (!formData.doctor_id) newErrors.doctor_id = 'Doctor is required';
     if (!formData.appointment_date) newErrors.appointment_date = 'Appointment date is required';
+    if (!formData.start_time) newErrors.start_time = 'Start time is required';
+    if (!formData.end_time) newErrors.end_time = 'End time is required';
+    if (formData.start_time && formData.end_time && formData.end_time <= formData.start_time) {
+      newErrors.end_time = 'End time must be later than start time';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

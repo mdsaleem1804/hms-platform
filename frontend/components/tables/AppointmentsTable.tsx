@@ -1,15 +1,6 @@
 'use client';
 
-interface Appointment {
-  id: string;
-  appointmentNo: string;
-  patientId: string;
-  doctorId: string;
-  appointmentDate: string;
-  startTime: string;
-  endTime: string;
-  status: string;
-}
+import { Appointment } from '@/services/appointmentService';
 
 interface AppointmentsTableProps {
   appointments: Appointment[];
@@ -29,6 +20,19 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
     }
   };
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority.toLowerCase()) {
+      case 'urgent':
+        return 'bg-red-50 text-red-700 border-red-100';
+      case 'high':
+        return 'bg-orange-50 text-orange-700 border-orange-100';
+      case 'low':
+        return 'bg-gray-100 text-gray-600 border-gray-200';
+      default:
+        return 'bg-blue-50 text-blue-700 border-blue-100';
+    }
+  };
+
   return (
     <table className="w-full">
       <thead className="bg-gray-50 border-b">
@@ -37,13 +41,16 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
             Appointment #
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-            Date
+            Patient
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-            Time
+            Department / Doctor
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-            Doctor ID
+            Schedule
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+            Token
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
             Status
@@ -56,19 +63,33 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
             <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
               {appointment.appointmentNo}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {new Date(appointment.appointmentDate).toLocaleDateString()}
+            <td className="px-6 py-4 text-sm text-gray-900">
+              <div className="font-medium text-gray-900">{appointment.patientName}</div>
+              <div className="text-xs text-gray-500 mt-1">{appointment.patientUhid}</div>
+            </td>
+            <td className="px-6 py-4 text-sm text-gray-600">
+              <div className="font-medium text-gray-900">{appointment.departmentName}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {appointment.doctorName}
+                {appointment.doctorSpecialization ? ` · ${appointment.doctorSpecialization}` : ''}
+              </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-              {appointment.startTime} - {appointment.endTime}
+              <div>{new Date(appointment.appointmentDate).toLocaleDateString()}</div>
+              <div className="text-xs text-gray-500 mt-1">{appointment.startTime} - {appointment.endTime}</div>
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-              {appointment.doctorId}
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
+              #{appointment.tokenNumber}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
-              <span className={`px-2 py-1 rounded text-sm font-medium ${getStatusColor(appointment.status)}`}>
-                {appointment.status}
-              </span>
+              <div className="flex flex-col gap-2 items-start">
+                <span className={`px-2 py-1 rounded text-sm font-medium ${getStatusColor(appointment.status)}`}>
+                  {appointment.status}
+                </span>
+                <span className={`px-2 py-1 rounded border text-xs font-medium ${getPriorityColor(appointment.priority)}`}>
+                  {appointment.priority}
+                </span>
+              </div>
             </td>
           </tr>
         ))}
