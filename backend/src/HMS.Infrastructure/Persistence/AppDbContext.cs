@@ -221,6 +221,11 @@ public class AppDbContext : DbContext
                 .HasColumnName("id")
                 .ValueGeneratedOnAdd();
 
+            entity.Property(a => a.DisplayId)
+                .HasColumnName("display_id")
+                .UseIdentityAlwaysColumn()
+                .ValueGeneratedOnAdd();
+
             entity.Property(a => a.AppointmentNo)
                 .HasColumnName("appointment_no")
                 .IsRequired();
@@ -277,6 +282,7 @@ public class AppDbContext : DbContext
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasIndex(a => a.AppointmentNo).IsUnique();
+            entity.HasIndex(a => a.DisplayId).IsUnique();
             entity.HasIndex(a => new { a.DoctorId, a.AppointmentDate });
             entity.HasIndex(a => a.Status);
 

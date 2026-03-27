@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Appointment } from '@/services/appointmentService';
 
 interface AppointmentsTableProps {
@@ -47,19 +48,19 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
             Department / Doctor
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-            Schedule
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-            Token
+            Date
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
             Status
+          </th>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+            Actions
           </th>
         </tr>
       </thead>
       <tbody className="divide-y">
         {appointments.map((appointment) => (
-          <tr key={appointment.id} className="hover:bg-gray-50 cursor-pointer">
+          <tr key={appointment.id} className="hover:bg-gray-50">
             <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
               {appointment.appointmentNo}
             </td>
@@ -75,11 +76,7 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
               </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-              <div>{new Date(appointment.appointmentDate).toLocaleDateString()}</div>
-              <div className="text-xs text-gray-500 mt-1">{appointment.startTime} - {appointment.endTime}</div>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
-              #{appointment.tokenNumber}
+              {new Date(appointment.appointmentDate).toLocaleDateString()}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
               <div className="flex flex-col gap-2 items-start">
@@ -90,6 +87,14 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
                   {appointment.priority}
                 </span>
               </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-right">
+              <Link
+                href={`/appointments/${appointment.displayId}/edit`}
+                className="inline-flex items-center rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Edit
+              </Link>
             </td>
           </tr>
         ))}

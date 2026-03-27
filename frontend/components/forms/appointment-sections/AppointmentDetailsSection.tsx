@@ -74,6 +74,7 @@ const AppointmentDetailsSection = memo(({
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingDepartments, setIsLoadingDepartments] = useState(false);
   const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
+  const [hasLoadedDoctors, setHasLoadedDoctors] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isAddDepartmentOpen, setIsAddDepartmentOpen] = useState(false);
   const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false);
@@ -101,17 +102,20 @@ const AppointmentDetailsSection = memo(({
   const loadDoctors = useCallback(async (departmentId: string) => {
     if (!departmentId) {
       setDoctors([]);
+      setHasLoadedDoctors(false);
       return;
     }
 
     try {
       setIsLoadingDoctors(true);
+      setHasLoadedDoctors(false);
       const doctorData = await doctorService.getByDepartmentId(departmentId);
       setDoctors(doctorData);
     } catch {
       setDoctors([]);
     } finally {
       setIsLoadingDoctors(false);
+      setHasLoadedDoctors(true);
     }
   }, []);
 
@@ -145,10 +149,14 @@ const AppointmentDetailsSection = memo(({
   }, [formData.department, formData.doctor_id, updateSelectField]);
 
   useEffect(() => {
-    if (formData.doctor_id && !doctors.some((doctor) => doctor.id === formData.doctor_id)) {
+    if (!hasLoadedDoctors || isLoadingDoctors || !formData.department) {
+      return;
+    }
+
+    if (formData.doctor_id && !doctors.some((doctor) => String(doctor.id) === String(formData.doctor_id))) {
       updateSelectField('doctor_id', '');
     }
-  }, [doctors, formData.doctor_id, updateSelectField]);
+  }, [doctors, formData.department, formData.doctor_id, hasLoadedDoctors, isLoadingDoctors, updateSelectField]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -399,42 +407,6 @@ const AppointmentDetailsSection = memo(({
           />
           {errors.appointment_date && (
             <p className="mt-1 text-xs text-red-500">{errors.appointment_date}</p>
-          )}
-        </div>
-
-        <div className="col-span-12 sm:col-span-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Start Time <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="time"
-            name="start_time"
-            value={formData.start_time}
-            onChange={onInputChange}
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.start_time ? 'border-red-400 bg-red-50' : 'border-gray-300'
-            }`}
-          />
-          {errors.start_time && (
-            <p className="mt-1 text-xs text-red-500">{errors.start_time}</p>
-          )}
-        </div>
-
-        <div className="col-span-12 sm:col-span-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            End Time <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="time"
-            name="end_time"
-            value={formData.end_time}
-            onChange={onInputChange}
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.end_time ? 'border-red-400 bg-red-50' : 'border-gray-300'
-            }`}
-          />
-          {errors.end_time && (
-            <p className="mt-1 text-xs text-red-500">{errors.end_time}</p>
           )}
         </div>
 

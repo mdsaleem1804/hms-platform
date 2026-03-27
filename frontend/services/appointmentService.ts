@@ -13,6 +13,7 @@ export interface CreateAppointmentReminderRequest {
 
 export interface Appointment {
   id: string;
+  displayId: number;
   appointmentNo: string;
   patientId: number;
   patientUhid: string;
@@ -56,6 +57,11 @@ class AppointmentService {
 
   async getById(id: string): Promise<Appointment> {
     const response = await apiClient.get<any>(`/api/appointments/${id}`);
+    return response.data.data;
+  }
+
+  async getByDisplayId(displayId: number): Promise<Appointment> {
+    const response = await apiClient.get<any>(`/api/appointments/by-number/${displayId}`);
     return response.data.data;
   }
 

@@ -16,6 +16,7 @@ public class CreateAppointmentReminderDto
 public class AppointmentDto
 {
     public string Id { get; set; } = string.Empty;
+    public int DisplayId { get; set; }
     public string AppointmentNo { get; set; } = string.Empty;
     public long PatientId { get; set; }
     public string PatientUhid { get; set; } = string.Empty;

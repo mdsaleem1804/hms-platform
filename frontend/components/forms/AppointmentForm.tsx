@@ -42,8 +42,9 @@ const defaultFormData: AppointmentFormData = {
   department: '',
   doctor_id: '',
   appointment_date: '',
-  start_time: '',
-  end_time: '',
+  // Hidden in UI, still required by backend contract.
+  start_time: '09:00',
+  end_time: '09:30',
   visit_type: 'consultation',
   notes: '',
   priority: 'normal',
@@ -123,11 +124,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     if (!formData.department) newErrors.department = 'Department is required';
     if (!formData.doctor_id) newErrors.doctor_id = 'Doctor is required';
     if (!formData.appointment_date) newErrors.appointment_date = 'Appointment date is required';
-    if (!formData.start_time) newErrors.start_time = 'Start time is required';
-    if (!formData.end_time) newErrors.end_time = 'End time is required';
-    if (formData.start_time && formData.end_time && formData.end_time <= formData.start_time) {
-      newErrors.end_time = 'End time must be later than start time';
-    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

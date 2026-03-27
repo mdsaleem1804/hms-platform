@@ -27,6 +27,11 @@ public class AppointmentRepository : IAppointmentRepository
         return await BaseQuery().FirstOrDefaultAsync(appointment => appointment.Id == id);
     }
 
+    public async Task<Appointment?> GetByDisplayIdAsync(int displayId)
+    {
+        return await BaseQuery().FirstOrDefaultAsync(appointment => appointment.DisplayId == displayId);
+    }
+
     public async Task<Appointment> CreateAsync(Appointment appointment)
     {
         _dbContext.Appointments.Add(appointment);

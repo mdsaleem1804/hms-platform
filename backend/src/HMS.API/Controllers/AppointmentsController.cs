@@ -42,6 +42,22 @@ public class AppointmentsController : ControllerBase
         return Ok(ApiResponse<AppointmentDto>.SuccessResponse(appointment, "Appointment retrieved successfully"));
     }
 
+    [HttpGet("by-number/{displayId:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<AppointmentDto>>> GetByDisplayId(int displayId)
+    {
+        _logger.LogInformation("Fetching appointment with display ID: {DisplayId}", displayId);
+        var appointment = await _appointmentService.GetAppointmentByDisplayIdAsync(displayId);
+        if (appointment == null)
+        {
+            throw new KeyNotFoundException($"Appointment with display ID {displayId} not found");
+        }
+
+        return Ok(ApiResponse<AppointmentDto>.SuccessResponse(appointment, "Appointment retrieved successfully"));
+    }
+
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

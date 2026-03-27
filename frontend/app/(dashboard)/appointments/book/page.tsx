@@ -48,11 +48,11 @@ export default function AppointmentBookingPage() {
       setIsSubmitting(true);
       const appointment = await appointmentService.create({
         patientId: data.patient_record_id,
-        doctorId: data.doctor_id,
-        departmentId: data.department,
+        doctorId: String(data.doctor_id),
+        departmentId: String(data.department),
         appointmentDate: data.appointment_date,
-        startTime: data.start_time,
-        endTime: data.end_time,
+        startTime: data.start_time || '09:00',
+        endTime: data.end_time || '09:30',
         visitType: data.visit_type,
         status: data.status,
         priority: data.priority,

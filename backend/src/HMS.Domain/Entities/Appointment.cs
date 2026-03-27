@@ -2,6 +2,7 @@ namespace HMS.Domain.Entities;
 
 public class Appointment : BaseEntity
 {
+    public int DisplayId { get; set; }
     public string AppointmentNo { get; set; } = string.Empty;
     public long PatientId { get; set; }
     public string DoctorId { get; set; } = string.Empty;

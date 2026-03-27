@@ -51,6 +51,12 @@ public class AppointmentService : IAppointmentService
         return appointment == null ? null : MapToDto(appointment);
     }
 
+    public async Task<AppointmentDto?> GetAppointmentByDisplayIdAsync(int displayId)
+    {
+        var appointment = await _appointmentRepository.GetByDisplayIdAsync(displayId);
+        return appointment == null ? null : MapToDto(appointment);
+    }
+
     public async Task<AppointmentDto> CreateAppointmentAsync(CreateAppointmentDto request)
     {
         var (patient, doctor, department, appointmentDate, startTime, endTime) = await ValidateRequestAsync(request);
@@ -256,6 +262,7 @@ public class AppointmentService : IAppointmentService
         return new AppointmentDto
         {
             Id = appointment.Id,
+            DisplayId = appointment.DisplayId,
             AppointmentNo = appointment.AppointmentNo,
             PatientId = appointment.PatientId,
             PatientUhid = appointment.Patient?.Uhid ?? string.Empty,
