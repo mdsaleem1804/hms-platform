@@ -8,6 +8,8 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Patient> Patients { get; set; }
+    public DbSet<Department> Departments { get; set; }
+    public DbSet<Doctor> Doctors { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<EmergencyContact> EmergencyContacts { get; set; }
     public DbSet<Attender> Attenders { get; set; }
@@ -261,6 +263,108 @@ public class AppDbContext : DbContext
             entity.HasIndex(a => a.Status);
 
             // Foreign key already configured in Patient entity
+        });
+
+        // Department Configuration
+        modelBuilder.Entity<Department>(entity =>
+        {
+            entity.ToTable("departments");
+            entity.HasKey(d => d.Id);
+
+            entity.Property(d => d.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(d => d.Name)
+                .HasColumnName("name")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(d => d.Description)
+                .HasColumnName("description");
+
+            entity.Property(d => d.CreatedBy)
+                .HasColumnName("created_by")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(d => d.UpdatedBy)
+                .HasColumnName("updated_by")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(d => d.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(d => d.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasIndex(d => d.Name).IsUnique();
+
+            // Relationships
+            entity.HasMany(d => d.Doctors)
+                .WithOne(doc => doc.Department)
+                .HasForeignKey(doc => doc.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Doctor Configuration
+        modelBuilder.Entity<Doctor>(entity =>
+        {
+            entity.ToTable("doctors");
+            entity.HasKey(d => d.Id);
+
+            entity.Property(d => d.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(d => d.Name)
+                .HasColumnName("name")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(d => d.Specialization)
+                .HasColumnName("specialization")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(d => d.Mobile)
+                .HasColumnName("mobile")
+                .HasMaxLength(10)
+                .IsRequired();
+
+            entity.Property(d => d.DepartmentId)
+                .HasColumnName("department_id")
+                .IsRequired();
+
+            entity.Property(d => d.CreatedBy)
+                .HasColumnName("created_by")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(d => d.UpdatedBy)
+                .HasColumnName("updated_by")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(d => d.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(d => d.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasIndex(d => d.Mobile).IsUnique();
+            entity.HasIndex(d => d.DepartmentId);
+
+            // Relationships
+            entity.HasMany(d => d.Appointments)
+                .WithOne(a => a.Doctor)
+                .HasForeignKey(a => a.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

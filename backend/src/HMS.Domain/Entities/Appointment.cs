@@ -11,6 +11,10 @@ public class Appointment : BaseEntity
     public int TokenNumber { get; set; }
     public string Status { get; set; } = "Scheduled";
     public string VisitType { get; set; } = string.Empty;
+    public string Department { get; set; } = string.Empty;
+    public string Priority { get; set; } = "Normal";
+    public string Notes { get; set; } = string.Empty;
 
     public Patient? Patient { get; set; }
+    public Doctor? Doctor { get; set; }
 }

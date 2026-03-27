@@ -1,8 +1,13 @@
 'use client';
 
 import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
+import { Plus } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
+import AddDepartmentModal from '@/components/modals/AddDepartmentModal';
+import AddDoctorModal from '@/components/modals/AddDoctorModal';
+import departmentService, { DepartmentSummary } from '@/services/departmentService';
+import doctorService, { DoctorSummary } from '@/services/doctorService';
 import patientService, { PatientSummary } from '@/services/patientService';
 
 interface AppointmentDetailsSectionProps {
@@ -22,32 +27,6 @@ interface AppointmentDetailsSectionProps {
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   onPatientSelect: (patient: PatientSummary) => void;
 }
-
-const departmentOptions = [
-  { value: '', label: 'Select Department' },
-  { value: 'general_medicine', label: 'General Medicine' },
-  { value: 'cardiology', label: 'Cardiology' },
-  { value: 'orthopedics', label: 'Orthopedics' },
-  { value: 'pediatrics', label: 'Pediatrics' },
-  { value: 'dermatology', label: 'Dermatology' },
-  { value: 'neurology', label: 'Neurology' },
-  { value: 'oncology', label: 'Oncology' },
-  { value: 'gynecology', label: 'Gynecology & Obstetrics' },
-  { value: 'ent', label: 'ENT' },
-  { value: 'ophthalmology', label: 'Ophthalmology' },
-  { value: 'psychiatry', label: 'Psychiatry' },
-  { value: 'radiology', label: 'Radiology' },
-];
-
-const doctorOptions = [
-  { value: '', label: 'Select Doctor' },
-  { value: 'dr_001', label: 'Dr. Rajesh Kumar — General Medicine' },
-  { value: 'dr_002', label: 'Dr. Priya Singh — Cardiology' },
-  { value: 'dr_003', label: 'Dr. Amit Patel — Orthopedics' },
-  { value: 'dr_004', label: 'Dr. Sarah Ahmed — Pediatrics' },
-  { value: 'dr_005', label: 'Dr. Vikram Nair — Neurology' },
-  { value: 'dr_006', label: 'Dr. Meena Sharma — Dermatology' },
-];
 
 const priorityOptions = [
   { value: 'normal', label: 'Normal' },
@@ -87,15 +66,86 @@ const AppointmentDetailsSection = memo(({
 }: AppointmentDetailsSectionProps) => {
   const [query, setQuery] = useState(formData.patient_name);
   const [results, setResults] = useState<PatientSummary[]>([]);
+  const [departments, setDepartments] = useState<DepartmentSummary[]>([]);
+  const [doctors, setDoctors] = useState<DoctorSummary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoadingDepartments, setIsLoadingDepartments] = useState(false);
+  const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isAddDepartmentOpen, setIsAddDepartmentOpen] = useState(false);
+  const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const updateSelectField = useCallback((name: 'department' | 'doctor_id', value: string) => {
+    onInputChange({
+      target: { name, value },
+    } as React.ChangeEvent<HTMLSelectElement>);
+  }, [onInputChange]);
+
+  const loadDepartments = useCallback(async () => {
+    try {
+      setIsLoadingDepartments(true);
+      const departmentData = await departmentService.getAll();
+      setDepartments(departmentData);
+    } catch {
+      setDepartments([]);
+    } finally {
+      setIsLoadingDepartments(false);
+    }
+  }, []);
+
+  const loadDoctors = useCallback(async (departmentId: string) => {
+    if (!departmentId) {
+      setDoctors([]);
+      return;
+    }
+
+    try {
+      setIsLoadingDoctors(true);
+      const doctorData = await doctorService.getByDepartmentId(departmentId);
+      setDoctors(doctorData);
+    } catch {
+      setDoctors([]);
+    } finally {
+      setIsLoadingDoctors(false);
+    }
+  }, []);
+
+  const departmentOptions = departments.map((department) => ({
+    value: department.id,
+    label: department.name,
+  }));
+
+  const doctorOptions = doctors.map((doctor) => ({
+    value: doctor.id,
+    label: `${doctor.name} — ${doctor.specialization}`,
+  }));
 
   // Sync query if patient_name is cleared externally
   useEffect(() => {
     if (!formData.patient_name) setQuery('');
   }, [formData.patient_name]);
+
+  useEffect(() => {
+    loadDepartments();
+  }, [loadDepartments]);
+
+  useEffect(() => {
+    loadDoctors(formData.department);
+  }, [formData.department, loadDoctors]);
+
+  useEffect(() => {
+    if (!formData.department && formData.doctor_id) {
+      updateSelectField('doctor_id', '');
+    }
+  }, [formData.department, formData.doctor_id, updateSelectField]);
+
+  useEffect(() => {
+    if (formData.doctor_id && !doctors.some((doctor) => doctor.id === formData.doctor_id)) {
+      updateSelectField('doctor_id', '');
+    }
+  }, [doctors, formData.doctor_id, updateSelectField]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -283,7 +333,19 @@ const AppointmentDetailsSection = memo(({
             options={departmentOptions}
             required
             error={errors.department}
+            disabled={isLoadingDepartments}
           />
+          {isLoadingDepartments && (
+            <p className="mt-1 text-xs text-gray-500">Loading departments...</p>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsAddDepartmentOpen(true)}
+            className="mt-2 flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Department
+          </button>
         </div>
 
         {/* Doctor */}
@@ -296,7 +358,22 @@ const AppointmentDetailsSection = memo(({
             options={doctorOptions}
             required
             error={errors.doctor_id}
+            disabled={!formData.department || isLoadingDoctors}
           />
+          {!formData.department && (
+            <p className="mt-1 text-xs text-gray-500">Select a department first to load doctors.</p>
+          )}
+          {formData.department && isLoadingDoctors && (
+            <p className="mt-1 text-xs text-gray-500">Loading doctors...</p>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsAddDoctorOpen(true)}
+            className="mt-2 flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Doctor
+          </button>
         </div>
 
         {/* Appointment Date */}
@@ -391,6 +468,21 @@ const AppointmentDetailsSection = memo(({
         </div>
 
       </div>
+
+      {/* Add Department Modal */}
+      <AddDepartmentModal
+        isOpen={isAddDepartmentOpen}
+        onClose={() => setIsAddDepartmentOpen(false)}
+        onSuccess={loadDepartments}
+      />
+
+      {/* Add Doctor Modal */}
+      <AddDoctorModal
+        isOpen={isAddDoctorOpen}
+        onClose={() => setIsAddDoctorOpen(false)}
+        defaultDepartmentId={formData.department}
+        onSuccess={() => loadDoctors(formData.department)}
+      />
     </div>
   );
 });

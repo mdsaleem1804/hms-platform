@@ -1,5 +1,8 @@
 using HMS.Application.Features.Patients;
+using HMS.Application.Features.Departments;
+using HMS.Application.Features.Doctors;
 using HMS.Application.Repositories;
+using HMS.Application.Services;
 using HMS.Domain.Interfaces;
 using HMS.Infrastructure.Repositories;
 using HMS.Infrastructure.UhidGeneration;
@@ -14,6 +17,14 @@ public static class ServiceExtensions
         // Patient Services
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IPatientRepository, PatientRepository>();
+
+        // Department Services
+        services.AddScoped<IDepartmentService, DepartmentService>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+
+        // Doctor Services
+        services.AddScoped<IDoctorService, DoctorService>();
+        services.AddScoped<IDoctorRepository, DoctorRepository>();
 
         // UHID Generator - Configuration-based selection
         var uhidOptions = new UhidGeneratorOptions();

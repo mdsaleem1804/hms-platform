@@ -4,7 +4,6 @@ import { Search, Bell, Settings, LogOut, User, Calendar, Calculator, MessageSqua
 import { useState } from 'react';
 
 export default function Header() {
-  const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
