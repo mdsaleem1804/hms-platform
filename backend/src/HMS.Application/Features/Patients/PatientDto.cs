@@ -1,5 +1,20 @@
 namespace HMS.Application.Features.Patients;
 
+/// <summary>
+/// Lightweight patient summary for search/lookup results.
+/// </summary>
+public class PatientSummaryDto
+{
+    public long Id { get; set; }
+    public string Uhid { get; set; } = string.Empty;
+    public string PatientName { get; set; } = string.Empty;
+    public DateTime Dob { get; set; }
+    public int Age { get; set; }
+    public string Gender { get; set; } = string.Empty;
+    public string BloodGroup { get; set; } = string.Empty;
+    public string Mobile { get; set; } = string.Empty;
+}
+
 public class PatientDto
 {
     public long Id { get; set; }

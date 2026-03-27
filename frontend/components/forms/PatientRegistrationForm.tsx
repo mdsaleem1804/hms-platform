@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import patientService from '@/services/patientService';
@@ -272,37 +272,6 @@ const PatientRegistrationForm = () => {
       setIsLoading(false);
     }
   };
-
-  const genderOptions = [
-    { value: 'male', label: 'Male' },
-    { value: 'female', label: 'Female' },
-    { value: 'other', label: 'Other' },
-  ];
-
-  const bloodGroupOptions = [
-    { value: 'a+', label: 'A+' },
-    { value: 'a-', label: 'A-' },
-    { value: 'b+', label: 'B+' },
-    { value: 'b-', label: 'B-' },
-    { value: 'ab+', label: 'AB+' },
-    { value: 'ab-', label: 'AB-' },
-    { value: 'o+', label: 'O+' },
-    { value: 'o-', label: 'O-' },
-  ];
-
-  const relationshipOptions = [
-    { value: 'father', label: 'Father' },
-    { value: 'mother', label: 'Mother' },
-    { value: 'spouse', label: 'Spouse' },
-    { value: 'other', label: 'Other' },
-  ];
-
-  const idProofOptions = [
-    { value: 'aadhaar', label: 'Aadhaar' },
-    { value: 'pan', label: 'PAN' },
-    { value: 'passport', label: 'Passport' },
-    { value: 'driving_license', label: 'Driving License' },
-  ];
 
   return (
     <div className="dashboard-form-container w-full">

@@ -39,6 +39,19 @@ public class PatientRepository : IPatientRepository
             .ToListAsync();
     }
 
+    public async Task<List<Patient>> SearchAsync(string query, int limit)
+    {
+        var q = query.Trim().ToLower();
+        return await _dbContext.Patients
+            .Where(p =>
+                p.PatientName.ToLower().Contains(q) ||
+                p.Uhid.ToLower().Contains(q) ||
+                p.Mobile.Contains(q))
+            .OrderBy(p => p.PatientName)
+            .Take(limit)
+            .ToListAsync();
+    }
+
     public async Task<Patient> CreateAsync(Patient patient)
     {
         _dbContext.Patients.Add(patient);

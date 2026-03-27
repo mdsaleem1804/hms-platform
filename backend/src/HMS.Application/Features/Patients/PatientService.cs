@@ -99,6 +99,16 @@ public class PatientService : IPatientService
         return patients.Select(MapToDto).ToList();
     }
 
+    public async Task<List<PatientSummaryDto>> SearchPatientsAsync(string query, int limit)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return [];
+
+        limit = Math.Clamp(limit, 1, 50);
+        var patients = await _patientRepository.SearchAsync(query, limit);
+        return patients.Select(MapToSummaryDto).ToList();
+    }
+
     public async Task<PatientDto> UpdatePatientAsync(long id, UpdatePatientDto request)
     {
         // Validate required fields
@@ -190,6 +200,18 @@ public class PatientService : IPatientService
             Referral = new ReferralDto()
         };
     }
+
+    private PatientSummaryDto MapToSummaryDto(Patient patient) => new()
+    {
+        Id = patient.Id,
+        Uhid = patient.Uhid,
+        PatientName = patient.PatientName,
+        Dob = patient.Dob,
+        Age = CalculateAge(patient.Dob),
+        Gender = patient.Gender,
+        BloodGroup = patient.BloodGroup,
+        Mobile = patient.Mobile
+    };
 
     private int CalculateAge(DateTime dob)
     {

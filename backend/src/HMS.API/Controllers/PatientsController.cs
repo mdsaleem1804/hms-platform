@@ -66,6 +66,31 @@ public class PatientsController : ControllerBase
     }
 
     /// <summary>
+    /// Search patients by name, UHID, or mobile number.
+    /// Returns lightweight summary records suitable for dropdowns and search inputs.
+    /// </summary>
+    /// <param name="q">Search term (min 1 character)</param>
+    /// <param name="limit">Max results to return (1–50, default 10)</param>
+    /// <returns>200 OK with list of matching patient summaries</returns>
+    [HttpGet("search")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<PatientSummaryDto>>>> SearchPatients(
+        [FromQuery] string q,
+        [FromQuery] int limit = 10)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            throw new ArgumentException("Search query 'q' is required");
+        }
+
+        _logger.LogInformation("Searching patients with query: {Query}, limit: {Limit}", q, limit);
+        var results = await _patientService.SearchPatientsAsync(q, limit);
+        return Ok(ApiResponse<List<PatientSummaryDto>>.SuccessResponse(results, $"{results.Count} patient(s) found"));
+    }
+
+    /// <summary>
     /// Get a specific patient by ID
     /// </summary>
     /// <param name="id">Patient ID</param>

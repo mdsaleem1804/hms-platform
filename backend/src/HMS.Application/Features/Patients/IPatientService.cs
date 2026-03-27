@@ -7,6 +7,7 @@ public interface IPatientService
     Task<PatientDto> CreatePatientAsync(CreatePatientDto request);
     Task<PatientDto?> GetPatientByIdAsync(long id);
     Task<List<PatientDto>> GetAllPatientsAsync();
+    Task<List<PatientSummaryDto>> SearchPatientsAsync(string query, int limit);
     Task<PatientDto> UpdatePatientAsync(long id, UpdatePatientDto request);
     Task<bool> DeletePatientAsync(long id);
 }

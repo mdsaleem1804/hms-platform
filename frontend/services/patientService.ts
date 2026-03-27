@@ -118,6 +118,17 @@ export interface PatientResponse {
   referral: ReferralData;
 }
 
+export interface PatientSummary {
+  id: number;
+  uhid: string;
+  patientName: string;
+  dob: string;
+  age: number;
+  gender: string;
+  bloodGroup: string;
+  mobile: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -130,6 +141,7 @@ export interface PatientServiceType {
   getPatientById(id: number): Promise<PatientResponse>;
   updatePatient(id: number, data: CreatePatientPayload): Promise<PatientResponse>;
   deletePatient(id: number): Promise<void>;
+  searchPatients(query: string, limit?: number): Promise<PatientSummary[]>;
 }
 
 const patientService: PatientServiceType = {
@@ -193,6 +205,21 @@ const patientService: PatientServiceType = {
         axios.isAxiosError(error)
           ? error.response?.data?.message || error.message
           : 'Failed to delete patient'
+      );
+    }
+  },
+
+  async searchPatients(query: string, limit = 10): Promise<PatientSummary[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<PatientSummary[]>>('/api/patients/search', {
+        params: { q: query, limit },
+      });
+      return response.data.data;
+    } catch (error) {
+      throw new Error(
+        axios.isAxiosError(error)
+          ? error.response?.data?.message || error.message
+          : 'Failed to search patients'
       );
     }
   },
