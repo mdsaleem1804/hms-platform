@@ -112,6 +112,12 @@ export default function Sidebar() {
       category: 'Administration',
     },
     {
+      name: 'OPD Billing',
+      path: '/billing/opd',
+      icon: <DollarSign className="h-5 w-5" />,
+      category: 'Administration',
+    },
+    {
       name: 'Records & Certificates',
       path: '/records-certificates',
       icon: <FileText className="h-5 w-5" />,

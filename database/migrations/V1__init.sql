@@ -7,3 +7,5 @@
 -- 3. doctor_schedules.sql
 -- 4. appointments.sql
 -- 5. visits.sql
+-- 6. billing.sql
+-- 7. billing_items.sql

@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<EmergencyContact> EmergencyContacts { get; set; }
     public DbSet<Attender> Attenders { get; set; }
     public DbSet<Referral> Referrals { get; set; }
+    public DbSet<Billing> Billings { get; set; }
+    public DbSet<BillingItem> BillingItems { get; set; }
     public DbSet<RevenueRate> RevenueRates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -421,6 +423,168 @@ public class AppDbContext : DbContext
                 .WithOne(a => a.Doctor)
                 .HasForeignKey(a => a.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Billing Configuration
+        modelBuilder.Entity<Billing>(entity =>
+        {
+            entity.ToTable("billings");
+            entity.HasKey(b => b.Id);
+
+            entity.Property(b => b.Id)
+                .HasColumnName("id")
+                .HasMaxLength(50)
+                .ValueGeneratedOnAdd();
+
+            entity.Property(b => b.BillNumber)
+                .HasColumnName("bill_number")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(b => b.PatientId)
+                .HasColumnName("patient_id")
+                .IsRequired();
+
+            entity.Property(b => b.AppointmentId)
+                .HasColumnName("appointment_id")
+                .HasMaxLength(50)
+                .IsRequired(false);
+
+            entity.Property(b => b.VisitType)
+                .HasColumnName("visit_type")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(b => b.DoctorId)
+                .HasColumnName("doctor_id")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(b => b.Date)
+                .HasColumnName("date")
+                .HasColumnType("date")
+                .IsRequired();
+
+            entity.Property(b => b.Subtotal)
+                .HasColumnName("subtotal")
+                .HasColumnType("numeric(12,2)")
+                .IsRequired();
+
+            entity.Property(b => b.Discount)
+                .HasColumnName("discount")
+                .HasColumnType("numeric(12,2)")
+                .IsRequired();
+
+            entity.Property(b => b.Tax)
+                .HasColumnName("tax")
+                .HasColumnType("numeric(12,2)")
+                .IsRequired();
+
+            entity.Property(b => b.NetAmount)
+                .HasColumnName("net_amount")
+                .HasColumnType("numeric(12,2)")
+                .IsRequired();
+
+            entity.Property(b => b.PaidAmount)
+                .HasColumnName("paid_amount")
+                .HasColumnType("numeric(12,2)")
+                .IsRequired();
+
+            entity.Property(b => b.PaymentMode)
+                .HasColumnName("payment_mode")
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(b => b.TransactionId)
+                .HasColumnName("transaction_id")
+                .HasMaxLength(100)
+                .IsRequired(false);
+
+            entity.Property(b => b.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(b => b.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(b => b.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
+            entity.HasIndex(b => b.BillNumber).IsUnique();
+            entity.HasIndex(b => b.PatientId);
+            entity.HasIndex(b => b.DoctorId);
+            entity.HasIndex(b => b.Date);
+
+            entity.HasOne(b => b.Patient)
+                .WithMany()
+                .HasForeignKey(b => b.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(b => b.Doctor)
+                .WithMany()
+                .HasForeignKey(b => b.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(b => b.Appointment)
+                .WithMany()
+                .HasForeignKey(b => b.AppointmentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasMany(b => b.Items)
+                .WithOne(i => i.Billing)
+                .HasForeignKey(i => i.BillingId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<BillingItem>(entity =>
+        {
+            entity.ToTable("billing_items");
+            entity.HasKey(i => i.Id);
+
+            entity.Property(i => i.Id)
+                .HasColumnName("id")
+                .HasMaxLength(50)
+                .ValueGeneratedOnAdd();
+
+            entity.Property(i => i.BillingId)
+                .HasColumnName("billing_id")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(i => i.ServiceName)
+                .HasColumnName("service_name")
+                .HasMaxLength(150)
+                .IsRequired();
+
+            entity.Property(i => i.Qty)
+                .HasColumnName("qty")
+                .IsRequired();
+
+            entity.Property(i => i.Rate)
+                .HasColumnName("rate")
+                .HasColumnType("numeric(12,2)")
+                .IsRequired();
+
+            entity.Property(i => i.Amount)
+                .HasColumnName("amount")
+                .HasColumnType("numeric(12,2)")
+                .IsRequired();
+
+            entity.Property(i => i.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(i => i.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(i => i.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
+            entity.HasIndex(i => i.BillingId);
         });
 
         // RevenueRate Configuration
