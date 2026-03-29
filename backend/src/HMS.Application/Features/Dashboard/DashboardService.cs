@@ -7,13 +7,16 @@ public class DashboardService : IDashboardService
 {
     private readonly IDashboardMetricsRepository _dashboardMetricsRepository;
     private readonly IRevenueRateRepository _revenueRateRepository;
+    private readonly IHospitalSettingsRepository _hospitalSettingsRepository;
 
     public DashboardService(
         IDashboardMetricsRepository dashboardMetricsRepository,
-        IRevenueRateRepository revenueRateRepository)
+        IRevenueRateRepository revenueRateRepository,
+        IHospitalSettingsRepository hospitalSettingsRepository)
     {
         _dashboardMetricsRepository = dashboardMetricsRepository;
         _revenueRateRepository = revenueRateRepository;
+        _hospitalSettingsRepository = hospitalSettingsRepository;
     }
 
     public async Task<DashboardMetricsDto> GetMetricsAsync(int days = 7)
@@ -116,6 +119,53 @@ public class DashboardService : IDashboardService
         return await GetRevenueRatesAsync();
     }
 
+    public async Task<HospitalSettingsDto> GetHospitalSettingsAsync()
+    {
+        var settings = await _hospitalSettingsRepository.GetAsync();
+        if (settings == null)
+        {
+            return new HospitalSettingsDto
+            {
+                HospitalName = "Hospital",
+                Country = "India",
+                ReportHeaderTagline = "Healthcare Management System",
+                ReportFooterNote = "Thank you for choosing our hospital. Please retain this bill for your records.",
+            };
+        }
+
+        return MapHospitalSettings(settings);
+    }
+
+    public async Task<HospitalSettingsDto> UpdateHospitalSettingsAsync(UpdateHospitalSettingsRequestDto request)
+    {
+        var name = request.HospitalName?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Hospital name is required");
+        }
+
+        var upserted = await _hospitalSettingsRepository.UpsertAsync(new HospitalSettings
+        {
+            HospitalName = name,
+            AddressLine1 = request.AddressLine1?.Trim() ?? string.Empty,
+            AddressLine2 = request.AddressLine2?.Trim() ?? string.Empty,
+            City = request.City?.Trim() ?? string.Empty,
+            State = request.State?.Trim() ?? string.Empty,
+            PostalCode = request.PostalCode?.Trim() ?? string.Empty,
+            Country = request.Country?.Trim() ?? string.Empty,
+            PhoneNumber = request.PhoneNumber?.Trim() ?? string.Empty,
+            AlternatePhoneNumber = request.AlternatePhoneNumber?.Trim() ?? string.Empty,
+            Email = request.Email?.Trim() ?? string.Empty,
+            Website = request.Website?.Trim() ?? string.Empty,
+            GstNumber = request.GstNumber?.Trim() ?? string.Empty,
+            RegistrationNumber = request.RegistrationNumber?.Trim() ?? string.Empty,
+            ReportHeaderTagline = request.ReportHeaderTagline?.Trim() ?? string.Empty,
+            ReportFooterNote = request.ReportFooterNote?.Trim() ?? string.Empty,
+        });
+
+        return MapHospitalSettings(upserted);
+    }
+
     private async Task<Dictionary<string, decimal>> GetVisitTypeRatesAsync()
     {
         var rates = await GetRevenueRatesAsync();
@@ -156,5 +206,27 @@ public class DashboardService : IDashboardService
         }
 
         return total;
+    }
+
+    private static HospitalSettingsDto MapHospitalSettings(HospitalSettings settings)
+    {
+        return new HospitalSettingsDto
+        {
+            HospitalName = settings.HospitalName,
+            AddressLine1 = settings.AddressLine1,
+            AddressLine2 = settings.AddressLine2,
+            City = settings.City,
+            State = settings.State,
+            PostalCode = settings.PostalCode,
+            Country = settings.Country,
+            PhoneNumber = settings.PhoneNumber,
+            AlternatePhoneNumber = settings.AlternatePhoneNumber,
+            Email = settings.Email,
+            Website = settings.Website,
+            GstNumber = settings.GstNumber,
+            RegistrationNumber = settings.RegistrationNumber,
+            ReportHeaderTagline = settings.ReportHeaderTagline,
+            ReportFooterNote = settings.ReportFooterNote,
+        };
     }
 }

@@ -28,6 +28,24 @@ export interface RevenueRate {
   rate: number;
 }
 
+export interface HospitalSettings {
+  hospitalName: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phoneNumber: string;
+  alternatePhoneNumber: string;
+  email: string;
+  website: string;
+  gstNumber: string;
+  registrationNumber: string;
+  reportHeaderTagline: string;
+  reportFooterNote: string;
+}
+
 class DashboardService {
   async getMetrics(days = 7): Promise<DashboardMetrics> {
     const response = await apiClient.get('/api/dashboard/metrics', {
@@ -47,6 +65,16 @@ class DashboardService {
       rates,
     });
     return (response.data?.data ?? []) as RevenueRate[];
+  }
+
+  async getHospitalSettings(): Promise<HospitalSettings> {
+    const response = await apiClient.get('/api/dashboard/hospital-settings');
+    return (response.data?.data ?? {}) as HospitalSettings;
+  }
+
+  async updateHospitalSettings(payload: HospitalSettings): Promise<HospitalSettings> {
+    const response = await apiClient.put('/api/dashboard/hospital-settings', payload);
+    return (response.data?.data ?? {}) as HospitalSettings;
   }
 }
 

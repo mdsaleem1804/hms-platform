@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import billingService, { BillingRecord } from '@/services/billingService';
+import dashboardService, { HospitalSettings } from '@/services/dashboardService';
 
 export default function ViewBillPage() {
   const params = useParams();
@@ -15,13 +16,18 @@ export default function ViewBillPage() {
   const shouldPrint = searchParams.get('print') === 'true';
 
   const [bill, setBill] = useState<BillingRecord | null>(null);
+  const [hospitalSettings, setHospitalSettings] = useState<HospitalSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadBill = async () => {
       try {
-        const data = await billingService.getById(billId);
+        const [data, settings] = await Promise.all([
+          billingService.getById(billId),
+          dashboardService.getHospitalSettings(),
+        ]);
         setBill(data);
+        setHospitalSettings(settings);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to load bill';
         toast.error(errorMessage);
@@ -73,6 +79,26 @@ export default function ViewBillPage() {
 
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('en-IN');
   const formatCurrency = (amount: number) => `₹ ${Number(amount).toFixed(2)}`;
+  const hospitalName = hospitalSettings?.hospitalName?.trim() || 'HOSPITAL';
+  const hospitalTagline = hospitalSettings?.reportHeaderTagline?.trim() || 'Healthcare Management System';
+  const hospitalPhone = hospitalSettings?.phoneNumber?.trim();
+  const gstNumber = hospitalSettings?.gstNumber?.trim();
+  const footerNote =
+    hospitalSettings?.reportFooterNote?.trim() ||
+    'Thank you for choosing our hospital. Please retain this bill for your records.';
+
+  const addressParts = [
+    hospitalSettings?.addressLine1,
+    hospitalSettings?.addressLine2,
+    hospitalSettings?.city,
+    hospitalSettings?.state,
+    hospitalSettings?.postalCode,
+    hospitalSettings?.country,
+  ]
+    .map((item) => item?.trim())
+    .filter(Boolean);
+
+  const addressLine = addressParts.length > 0 ? addressParts.join(', ') : 'Address not configured';
 
   return (
     <div className="min-h-screen bg-white print:bg-white print:p-0">
@@ -103,9 +129,11 @@ export default function ViewBillPage() {
       <div className="mx-auto max-w-3xl bg-white p-12 print:max-w-full print:p-8">
         {/* Header */}
         <div className="mb-8 border-b-2 border-gray-800 pb-6 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">HOSPITAL</h1>
-          <p className="mt-1 text-sm text-gray-600">Healthcare Management System</p>
-          <p className="text-xs text-gray-500">Address: Your Hospital Address | Phone: +91-XXXXX-XXXXX</p>
+          <h1 className="text-3xl font-bold text-gray-900">{hospitalName}</h1>
+          <p className="mt-1 text-sm text-gray-600">{hospitalTagline}</p>
+          <p className="text-xs text-gray-500">
+            Address: {addressLine}{hospitalPhone ? ` | Phone: ${hospitalPhone}` : ''}
+          </p>
         </div>
 
         {/* Bill Title */}
@@ -236,8 +264,8 @@ export default function ViewBillPage() {
 
         {/* Terms */}
         <div className="mb-8 border-t-2 border-gray-800 pt-6 text-center text-xs text-gray-600">
-          <p>Thank you for choosing our hospital. Please retain this bill for your records.</p>
-          <p className="mt-2">GST Registration No: XXXXXXXXXXXX</p>
+          <p>{footerNote}</p>
+          {gstNumber ? <p className="mt-2">GST Registration No: {gstNumber}</p> : null}
         </div>
 
         {/* Print Footer */}

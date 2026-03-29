@@ -51,4 +51,30 @@ public class DashboardController : ControllerBase
         var rates = await _dashboardService.UpdateRevenueRatesAsync(request);
         return Ok(ApiResponse<List<RevenueRateDto>>.SuccessResponse(rates, "Revenue rates updated successfully"));
     }
+
+    [HttpGet("hospital-settings")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<HospitalSettingsDto>>> GetHospitalSettings()
+    {
+        _logger.LogInformation("Fetching hospital settings");
+        var settings = await _dashboardService.GetHospitalSettingsAsync();
+        return Ok(ApiResponse<HospitalSettingsDto>.SuccessResponse(settings, "Hospital settings retrieved successfully"));
+    }
+
+    [HttpPut("hospital-settings")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<HospitalSettingsDto>>> UpdateHospitalSettings([FromBody] UpdateHospitalSettingsRequestDto request)
+    {
+        if (!ModelState.IsValid)
+        {
+            throw new ArgumentException("Invalid request data");
+        }
+
+        _logger.LogInformation("Updating hospital settings");
+        var settings = await _dashboardService.UpdateHospitalSettingsAsync(request);
+        return Ok(ApiResponse<HospitalSettingsDto>.SuccessResponse(settings, "Hospital settings updated successfully"));
+    }
 }

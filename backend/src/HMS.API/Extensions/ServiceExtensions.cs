@@ -33,6 +33,7 @@ public static class ServiceExtensions
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IDashboardMetricsRepository, DashboardMetricsRepository>();
         services.AddScoped<IRevenueRateRepository, RevenueRateRepository>();
+        services.AddScoped<IHospitalSettingsRepository, HospitalSettingsRepository>();
 
         // Department Services
         services.AddScoped<IDepartmentService, DepartmentService>();

@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Billing> Billings { get; set; }
     public DbSet<BillingItem> BillingItems { get; set; }
     public DbSet<RevenueRate> RevenueRates { get; set; }
+    public DbSet<HospitalSettings> HospitalSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -599,6 +600,40 @@ public class AppDbContext : DbContext
             entity.Property(r => r.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
             entity.Property(r => r.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
             entity.HasIndex(r => r.VisitType).IsUnique();
+        });
+
+        // HospitalSettings Configuration
+        modelBuilder.Entity<HospitalSettings>(entity =>
+        {
+            entity.ToTable("hospital_settings");
+            entity.HasKey(h => h.Id);
+
+            entity.Property(h => h.Id)
+                .HasColumnName("id")
+                .HasMaxLength(50);
+
+            entity.Property(h => h.HospitalName)
+                .HasColumnName("hospital_name")
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(h => h.AddressLine1).HasColumnName("address_line1").HasMaxLength(300);
+            entity.Property(h => h.AddressLine2).HasColumnName("address_line2").HasMaxLength(300);
+            entity.Property(h => h.City).HasColumnName("city").HasMaxLength(120);
+            entity.Property(h => h.State).HasColumnName("state").HasMaxLength(120);
+            entity.Property(h => h.PostalCode).HasColumnName("postal_code").HasMaxLength(20);
+            entity.Property(h => h.Country).HasColumnName("country").HasMaxLength(120);
+            entity.Property(h => h.PhoneNumber).HasColumnName("phone_number").HasMaxLength(30);
+            entity.Property(h => h.AlternatePhoneNumber).HasColumnName("alternate_phone_number").HasMaxLength(30);
+            entity.Property(h => h.Email).HasColumnName("email").HasMaxLength(160);
+            entity.Property(h => h.Website).HasColumnName("website").HasMaxLength(160);
+            entity.Property(h => h.GstNumber).HasColumnName("gst_number").HasMaxLength(60);
+            entity.Property(h => h.RegistrationNumber).HasColumnName("registration_number").HasMaxLength(100);
+            entity.Property(h => h.ReportHeaderTagline).HasColumnName("report_header_tagline").HasMaxLength(200);
+            entity.Property(h => h.ReportFooterNote).HasColumnName("report_footer_note").HasMaxLength(500);
+            entity.Property(h => h.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            entity.Property(h => h.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
+            entity.Property(h => h.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
         });
     }
 }
