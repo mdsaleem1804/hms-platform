@@ -5,7 +5,7 @@ using Serilog;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls("http://localhost:7000");
+builder.WebHost.UseUrls("http://0.0.0.0:7000");
 // Configure services
 builder.Services
     .AddControllers()
@@ -44,14 +44,11 @@ builder.Services.AddCors(options =>
     // Policy for frontend development (Next.js on localhost:3000)
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:3000",      // Next.js development
-            "http://127.0.0.1:3000",      // Alternative localhost
-            "https://localhost:3000"      // HTTPS variant
-        )
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();  // Important for cookies/auth headers
+        // TODO: Restrict to specific origins before production deployment
+        // Previously allowed: localhost:3000, 127.0.0.1:3000, 192.168.1.6:3000
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
     
     // Fallback policy for other environments (if needed)
