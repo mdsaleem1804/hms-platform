@@ -163,6 +163,11 @@ public class PatientService : IPatientService
             throw new KeyNotFoundException($"Patient with ID {id} not found");
         }
 
+        if (existingPatient.CreatedAt.Date != DateTime.UtcNow.Date)
+        {
+            throw new InvalidOperationException("Editing is allowed only for records created today");
+        }
+
         // Check for duplicate mobile if mobile is different
         if (existingPatient.Mobile != request.Mobile)
         {
@@ -210,6 +215,7 @@ public class PatientService : IPatientService
         return new PatientDto
         {
             Id = patient.Id,
+            CreatedAt = patient.CreatedAt,
             Uhid = patient.Uhid,
             PatientName = patient.PatientName,
             Dob = patient.Dob,

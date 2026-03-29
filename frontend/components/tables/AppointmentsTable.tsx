@@ -2,13 +2,37 @@
 
 import Link from 'next/link';
 import { Appointment } from '@/services/appointmentService';
-import { formatAppointmentDate } from '@/lib/appointmentDate';
+import { formatAppointmentDate, toAppointmentDateInputValue } from '@/lib/appointmentDate';
+import { isCreatedToday } from '@/lib/editWindow';
 
 interface AppointmentsTableProps {
   appointments: Appointment[];
 }
 
 export default function AppointmentsTable({ appointments }: AppointmentsTableProps) {
+  const canCreateOpdBill = (status: string) => status.toLowerCase() === 'confirmed';
+
+  const isPreviousAppointmentDate = (appointmentDate: string) => {
+    const appointmentDay = toAppointmentDateInputValue(appointmentDate);
+    const today = toAppointmentDateInputValue(new Date());
+
+    if (!appointmentDay || !today) return false;
+    return appointmentDay < today;
+  };
+
+  const buildOpdBillingHref = (appointment: Appointment) => {
+    const params = new URLSearchParams({
+      appointmentId: appointment.id,
+      patientId: String(appointment.patientId),
+      doctorId: appointment.doctorId,
+      departmentId: appointment.departmentId,
+      visitType: appointment.visitType || 'consultation',
+      appointmentDate: appointment.appointmentDate,
+    });
+
+    return `/billing/opd/create?${params.toString()}`;
+  };
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
@@ -60,7 +84,13 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
         </tr>
       </thead>
       <tbody className="divide-y">
-        {appointments.map((appointment) => (
+        {appointments.map((appointment) => {
+          const isEditable = isCreatedToday(appointment.createdAt);
+          const showOpdBillAction = canCreateOpdBill(appointment.status);
+          const isPastAppointment = isPreviousAppointmentDate(appointment.appointmentDate);
+          const isOpdBillEnabled = showOpdBillAction && !isPastAppointment;
+
+          return (
           <tr key={appointment.id} className="hover:bg-gray-50">
             <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
               {appointment.appointmentNo}
@@ -90,15 +120,42 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
               </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-right">
-              <Link
-                href={`/appointments/${appointment.displayId}/edit`}
-                className="inline-flex items-center rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                Edit
-              </Link>
+              <div className="inline-flex items-center gap-2">
+                {showOpdBillAction && (
+                  isOpdBillEnabled ? (
+                    <Link
+                      href={buildOpdBillingHref(appointment)}
+                      className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
+                    >
+                      OPD Bill
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="inline-flex items-center rounded-lg bg-gray-200 px-3 py-1.5 text-sm font-medium text-gray-500 cursor-not-allowed"
+                      title="OPD billing is not allowed for previous appointment dates"
+                    >
+                      OPD Bill
+                    </button>
+                  )
+                )}
+                <Link
+                  href={`/appointments/${appointment.displayId}/edit`}
+                  className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    isEditable
+                      ? 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                      : 'pointer-events-none cursor-not-allowed border-gray-200 text-gray-400'
+                  }`}
+                  title={isEditable ? 'Edit appointment' : 'Only records created today can be edited'}
+                >
+                  Edit
+                </Link>
+              </div>
             </td>
           </tr>
-        ))}
+          );
+        })}
       </tbody>
     </table>
   );

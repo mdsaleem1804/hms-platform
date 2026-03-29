@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Eye, Pencil, Printer, XCircle } from 'lucide-react';
+import { Eye, Pencil, Printer } from 'lucide-react';
 import { BillingRecord } from '@/services/billingService';
+import { isCreatedToday } from '@/lib/editWindow';
 
 interface BillingsTableProps {
   billings: BillingRecord[];
-  onCancel: (bill: BillingRecord) => void;
   onEdit: (bill: BillingRecord) => void;
 }
 
@@ -21,7 +21,7 @@ const formatAmount = (value: number) => Number(value).toLocaleString('en-IN', {
   maximumFractionDigits: 2,
 });
 
-export default function BillingsTable({ billings, onCancel, onEdit }: BillingsTableProps) {
+export default function BillingsTable({ billings, onEdit }: BillingsTableProps) {
   if (!billings || billings.length === 0) {
     return (
       <div className="py-14 text-center text-gray-500">
@@ -53,7 +53,7 @@ export default function BillingsTable({ billings, onCancel, onEdit }: BillingsTa
         </thead>
         <tbody>
           {billings.map((bill, index) => {
-            const isPaid = bill.status === 'Paid';
+            const isEditable = isCreatedToday(bill.createdAt);
 
             return (
               <tr
@@ -100,21 +100,16 @@ export default function BillingsTable({ billings, onCancel, onEdit }: BillingsTa
                     <button
                       type="button"
                       onClick={() => onEdit(bill)}
-                      disabled={isPaid}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded border border-blue-200 text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
-                      title={isPaid ? 'Paid bill cannot be edited' : 'Edit bill'}
+                      disabled={!isEditable}
+                      className={`inline-flex h-8 w-8 items-center justify-center rounded border transition ${
+                        isEditable
+                          ? 'border-blue-200 text-blue-700 hover:bg-blue-50'
+                          : 'cursor-not-allowed border-gray-200 text-gray-300'
+                      }`}
+                      title={isEditable ? 'Edit bill' : 'Only records created today can be edited'}
                       aria-label="Edit bill"
                     >
                       <Pencil size={15} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onCancel(bill)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded border border-red-200 text-red-700 transition hover:bg-red-50"
-                      title="Cancel bill"
-                      aria-label="Cancel bill"
-                    >
-                      <XCircle size={15} />
                     </button>
                   </div>
                 </td>

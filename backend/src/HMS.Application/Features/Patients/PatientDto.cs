@@ -36,6 +36,7 @@ public class PatientSummaryDto
 public class PatientDto
 {
     public long Id { get; set; }
+    public DateTime CreatedAt { get; set; }
     public string Uhid { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;
     public DateTime Dob { get; set; }

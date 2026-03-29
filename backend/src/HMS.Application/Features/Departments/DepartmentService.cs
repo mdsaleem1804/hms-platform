@@ -51,6 +51,9 @@ public class DepartmentService : IDepartmentService
         if (department == null)
             throw new KeyNotFoundException($"Department with ID {id} not found");
 
+        if (department.CreatedAt.Date != DateTime.UtcNow.Date)
+            throw new InvalidOperationException("Editing is allowed only for records created today");
+
         department.Name = updateDto.Name?.Trim() ?? department.Name;
         department.Description = updateDto.Description?.Trim();
         department.UpdatedBy = updatedBy;

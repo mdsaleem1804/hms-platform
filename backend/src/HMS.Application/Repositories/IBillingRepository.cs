@@ -17,5 +17,6 @@ public interface IBillingRepository
     Task<Billing?> GetByBillNumberAsync(string billNumber);
     Task<string> GetNextBillNumberAsync();
     Task<Billing> CreateAsync(Billing billing);
+    Task<Billing> UpdateAsync(Billing billing);
     Task CancelAsync(string id);
 }

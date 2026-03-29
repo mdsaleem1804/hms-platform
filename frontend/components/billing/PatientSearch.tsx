@@ -9,6 +9,7 @@ import { BillingPatientSummary } from './types';
 interface PatientSearchProps {
   value: BillingPatientSummary | null;
   onSelect: (patient: BillingPatientSummary | null) => void;
+  disabled?: boolean;
 }
 
 const toBillingPatient = (patient: PatientSummary): BillingPatientSummary => ({
@@ -21,7 +22,7 @@ const toBillingPatient = (patient: PatientSummary): BillingPatientSummary => ({
   mobile: patient.mobile,
 });
 
-export function PatientSearch({ value, onSelect }: PatientSearchProps) {
+export function PatientSearch({ value, onSelect, disabled = false }: PatientSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<BillingPatientSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,6 +32,12 @@ export function PatientSearch({ value, onSelect }: PatientSearchProps) {
     let active = true;
 
     const runSearch = async () => {
+      if (disabled) {
+        setResults([]);
+        setError('');
+        return;
+      }
+
       if (!query.trim()) {
         setResults([]);
         setError('');
@@ -55,14 +62,15 @@ export function PatientSearch({ value, onSelect }: PatientSearchProps) {
     return () => {
       active = false;
     };
-  }, [query]);
+  }, [disabled, query]);
 
   const helperText = useMemo(() => {
+    if (disabled) return 'Patient is prefilled from appointment and cannot be changed.';
     if (loading) return 'Searching patients...';
     if (error) return error;
     if (query.trim() && !results.length) return 'No patients found';
     return 'Search by UHID, name, or mobile';
-  }, [loading, error, query, results.length]);
+  }, [disabled, loading, error, query, results.length]);
 
   return (
     <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -71,17 +79,23 @@ export function PatientSearch({ value, onSelect }: PatientSearchProps) {
           <h2 className="text-sm font-semibold text-gray-900">Patient Selection</h2>
           <p className="text-xs text-gray-500">Lookup and select existing patient quickly.</p>
         </div>
-        <Link
-          href="/patients/register"
-          className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700"
-        >
-          New Patient
-        </Link>
+        {!disabled && (
+          <Link
+            href="/patients/register"
+            className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700"
+          >
+            New Patient
+          </Link>
+        )}
       </div>
 
       <GlobalSearch
         value={query}
-        onChange={setQuery}
+        onChange={(value) => {
+          if (!disabled) {
+            setQuery(value);
+          }
+        }}
         placeholder="Search by UHID / Name / Mobile"
       />
 
@@ -94,6 +108,7 @@ export function PatientSearch({ value, onSelect }: PatientSearchProps) {
               key={patient.id}
               type="button"
               onClick={() => {
+                if (disabled) return;
                 onSelect(patient);
                 setQuery(patient.patientName);
                 setResults([]);
@@ -123,9 +138,11 @@ export function PatientSearch({ value, onSelect }: PatientSearchProps) {
             <button
               type="button"
               onClick={() => {
+                if (disabled) return;
                 onSelect(null);
                 setQuery('');
               }}
+              disabled={disabled}
               className="rounded border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
             >
               Clear

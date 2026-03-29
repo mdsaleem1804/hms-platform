@@ -6,5 +6,6 @@ public interface IBillingService
     Task<BillingDto?> GetByIdAsync(string id);
     Task<BillingDto?> GetByBillNumberAsync(string billNumber);
     Task<BillingDto> CreateAsync(CreateBillingDto request);
+    Task<BillingDto> UpdateAsync(string id, UpdateBillingDto request);
     Task CancelAsync(string id);
 }

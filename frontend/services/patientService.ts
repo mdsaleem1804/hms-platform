@@ -101,6 +101,7 @@ export interface CreatePatientPayload {
 
 export interface PatientResponse {
   id: number;
+  createdAt: string;
   uhid: string;
   patientName: string;
   dob: string;

@@ -61,13 +61,12 @@ public class AppointmentService : IAppointmentService
     {
         var (patient, doctor, department, appointmentDate, startTime, endTime) = await ValidateRequestAsync(request);
 
-        var sequence = await _appointmentRepository.GetDailyAppointmentCountAsync(appointmentDate) + 1;
         var tokenNumber = await _appointmentRepository.GetNextTokenNumberAsync(doctor.Id, appointmentDate);
 
         var appointment = new Appointment
         {
             Id = Guid.NewGuid().ToString(),
-            AppointmentNo = $"APT-{appointmentDate:yyyyMMdd}-{sequence:D4}",
+            AppointmentNo = Guid.NewGuid().ToString("N"), // temp; replaced by repository using display_id
             PatientId = patient.Id,
             DoctorId = doctor.Id,
             AppointmentDate = appointmentDate,
@@ -92,6 +91,11 @@ public class AppointmentService : IAppointmentService
         if (existingAppointment == null)
         {
             throw new KeyNotFoundException($"Appointment with ID {id} not found");
+        }
+
+        if (existingAppointment.CreatedAt.Date != DateTime.UtcNow.Date)
+        {
+            throw new InvalidOperationException("Editing is allowed only for records created today");
         }
 
         var (patient, doctor, department, appointmentDate, startTime, endTime) = await ValidateRequestAsync(request, id);

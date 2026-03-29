@@ -139,6 +139,17 @@ public class BillingRepository : IBillingRepository
         return await GetByIdAsync(billing.Id) ?? billing;
     }
 
+    public async Task<Billing> UpdateAsync(Billing billing)
+    {
+        billing.UpdatedAt = DateTime.UtcNow;
+
+        // Billing is loaded as a tracked entity in the same DbContext scope.
+        // Calling Update() here forces the full graph to Modified and can turn
+        // newly added BillingItems into updates, causing concurrency errors.
+        await _context.SaveChangesAsync();
+        return await GetByIdAsync(billing.Id) ?? billing;
+    }
+
     public async Task CancelAsync(string id)
     {
         var billing = await _context.Billings.FirstOrDefaultAsync(item => item.Id == id && !item.IsDeleted)

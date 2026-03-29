@@ -167,6 +167,11 @@ class BillingService {
     return normalizeBillingRecord((response.data?.data ?? {}) as Record<string, unknown>);
   }
 
+  async update(id: string, data: Record<string, unknown>): Promise<BillingRecord> {
+    const response = await apiClient.put(`/api/billing/${id}`, data);
+    return normalizeBillingRecord((response.data?.data ?? {}) as Record<string, unknown>);
+  }
+
   async cancel(id: string): Promise<void> {
     await apiClient.delete(`/api/billing/${id}/cancel`);
   }

@@ -93,6 +93,24 @@ public class BillingController : ControllerBase
         return Ok(ApiResponse<BillingDto>.SuccessResponse(billing, "Billing retrieved successfully"));
     }
 
+    [HttpPut("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<BillingDto>>> Update(string id, [FromBody] UpdateBillingDto request)
+    {
+        if (!ModelState.IsValid)
+        {
+            throw new ArgumentException("Invalid request data");
+        }
+
+        var updated = await _billingService.UpdateAsync(id, request);
+        _logger.LogInformation("Billing updated successfully with ID: {BillingId}", id);
+
+        return Ok(ApiResponse<BillingDto>.SuccessResponse(updated, "Billing updated successfully"));
+    }
+
     [HttpDelete("{id}/cancel")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -59,7 +59,7 @@ export default function Sidebar() {
     },
     {
       name: 'Out Patient (OPD)',
-      path: '/opd',
+      path: '/billing/opd',
       icon: <ClipboardList className="h-5 w-5" />,
       category: 'Clinical',
     },
@@ -108,12 +108,6 @@ export default function Sidebar() {
     {
       name: 'Accounts & Finance',
       path: '/accounts-finance',
-      icon: <DollarSign className="h-5 w-5" />,
-      category: 'Administration',
-    },
-    {
-      name: 'OPD Billing',
-      path: '/billing/opd',
       icon: <DollarSign className="h-5 w-5" />,
       category: 'Administration',
     },

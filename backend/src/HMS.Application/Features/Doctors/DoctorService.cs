@@ -76,6 +76,9 @@ public class DoctorService : IDoctorService
         if (doctor == null)
             throw new KeyNotFoundException($"Doctor with ID {id} not found");
 
+        if (doctor.CreatedAt.Date != DateTime.UtcNow.Date)
+            throw new InvalidOperationException("Editing is allowed only for records created today");
+
         if (!string.IsNullOrWhiteSpace(updateDto.DepartmentId) && updateDto.DepartmentId != doctor.DepartmentId)
         {
             var department = await _departmentRepository.GetByIdAsync(updateDto.DepartmentId);

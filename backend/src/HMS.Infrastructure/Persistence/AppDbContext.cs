@@ -546,7 +546,7 @@ public class AppDbContext : DbContext
             entity.Property(i => i.Id)
                 .HasColumnName("id")
                 .HasMaxLength(50)
-                .ValueGeneratedOnAdd();
+                .ValueGeneratedNever();
 
             entity.Property(i => i.BillingId)
                 .HasColumnName("billing_id")

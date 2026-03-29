@@ -1,15 +1,18 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import BillingListToolbar from '@/components/billing/BillingListToolbar';
 import BillingPagination from '@/components/billing/BillingPagination';
 import BillingsTable from '@/components/tables/BillingsTable';
 import { useBillings } from '@/hooks/useBillings';
-import billingService, { BillingRecord } from '@/services/billingService';
+import { BillingRecord } from '@/services/billingService';
 import doctorService, { DoctorSummary } from '@/services/doctorService';
+import { EDIT_WINDOW_MESSAGE, isCreatedToday } from '@/lib/editWindow';
 
 export default function OpdBillingListPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [status, setStatus] = useState('');
   const [doctorId, setDoctorId] = useState('');
@@ -18,7 +21,6 @@ export default function OpdBillingListPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [doctors, setDoctors] = useState<DoctorSummary[]>([]);
-  const [processingCancelId, setProcessingCancelId] = useState<string | null>(null);
 
   const query = useMemo(
     () => ({
@@ -39,7 +41,6 @@ export default function OpdBillingListPage() {
     error,
     totalPages,
     totalRecords,
-    refetch,
   } = useBillings(query);
 
   useEffect(() => {
@@ -194,30 +195,12 @@ export default function OpdBillingListPage() {
   };
 
   const handleEdit = (bill: BillingRecord) => {
-    if (bill.status === 'Paid') {
-      toast.error('Paid bills cannot be edited');
+    if (!isCreatedToday(bill.createdAt)) {
+      toast.error(EDIT_WINDOW_MESSAGE);
       return;
     }
 
-    toast('Edit flow can be connected to a dedicated update screen/API next.');
-  };
-
-  const handleCancel = async (bill: BillingRecord) => {
-    if (!window.confirm(`Cancel bill ${bill.billNumber}? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      setProcessingCancelId(bill.id);
-      await billingService.cancel(bill.id);
-      toast.success(`Bill ${bill.billNumber} cancelled successfully`);
-      await refetch();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to cancel bill';
-      toast.error(message);
-    } finally {
-      setProcessingCancelId(null);
-    }
+    router.push(`/billing/opd/create?editId=${bill.id}`);
   };
 
   const safeBillings = billings ?? [];
@@ -247,12 +230,6 @@ export default function OpdBillingListPage() {
         onPrint={handlePrint}
       />
 
-      {processingCancelId && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
-          Cancelling bill...
-        </div>
-      )}
-
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
           Error loading bills: {error}
@@ -267,7 +244,6 @@ export default function OpdBillingListPage() {
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <BillingsTable
             billings={safeBillings}
-            onCancel={handleCancel}
             onEdit={handleEdit}
           />
           <BillingPagination

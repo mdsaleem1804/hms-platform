@@ -76,3 +76,7 @@ public class CreateBillingDto
     public string PaymentMode { get; set; } = string.Empty;
     public string? TransactionId { get; set; }
 }
+
+public class UpdateBillingDto : CreateBillingDto
+{
+}

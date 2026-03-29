@@ -41,14 +41,14 @@ const defaultFormData: AppointmentFormData = {
   patient_id: '',
   department: '',
   doctor_id: '',
-  appointment_date: '',
+  appointment_date: new Date().toISOString().split('T')[0],
   // Hidden in UI, still required by backend contract.
   start_time: '09:00',
   end_time: '09:30',
   visit_type: 'consultation',
   notes: '',
   priority: 'normal',
-  status: 'scheduled',
+  status: 'confirmed',
   token_number: '',
   reminders: [],
 };
@@ -121,7 +121,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!formData.patient_record_id) newErrors.patient_name = 'Select a patient from the search results';
-    if (!formData.department) newErrors.department = 'Department is required';
     if (!formData.doctor_id) newErrors.doctor_id = 'Doctor is required';
     if (!formData.appointment_date) newErrors.appointment_date = 'Appointment date is required';
     setErrors(newErrors);

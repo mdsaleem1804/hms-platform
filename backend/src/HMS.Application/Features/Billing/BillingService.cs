@@ -143,6 +143,88 @@ public class BillingService : IBillingService
         return MapToDto(created);
     }
 
+    public async Task<BillingDto> UpdateAsync(string id, UpdateBillingDto request)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            throw new ArgumentException("Billing ID is required", nameof(id));
+        }
+
+        var existing = await _billingRepository.GetByIdAsync(id.Trim())
+            ?? throw new KeyNotFoundException($"Billing with ID {id} not found");
+
+        if (existing.CreatedAt.Date != DateTime.UtcNow.Date)
+        {
+            throw new InvalidOperationException("Editing is allowed only for records created today");
+        }
+
+        await ValidateRequestAsync(request);
+
+        var sanitizedItems = request.Items
+            .Where(item => !string.IsNullOrWhiteSpace(item.ServiceName))
+            .Select(item =>
+            {
+                var qty = Math.Max(1, item.Qty);
+                var rate = Math.Max(0m, item.Rate);
+                return new CreateBillingItemDto
+                {
+                    ServiceName = item.ServiceName.Trim(),
+                    Qty = qty,
+                    Rate = rate,
+                };
+            })
+            .ToList();
+
+        if (sanitizedItems.Count == 0)
+        {
+            throw new ArgumentException("At least one billing item is required");
+        }
+
+        var subtotal = sanitizedItems.Sum(item => item.Qty * item.Rate);
+        var discount = CalculateDiscount(subtotal, request.DiscountValue, request.DiscountType);
+        var tax = Math.Max(0m, request.Tax);
+        var netAmount = subtotal - discount + tax;
+
+        if (netAmount <= 0)
+        {
+            throw new ArgumentException("Net amount must be greater than 0");
+        }
+
+        var paidAmount = Math.Max(0m, request.PaidAmount);
+        if (paidAmount > netAmount)
+        {
+            throw new ArgumentException("Paid amount cannot be greater than net amount", nameof(request.PaidAmount));
+        }
+
+        existing.PatientId = request.PatientId;
+        existing.AppointmentId = string.IsNullOrWhiteSpace(request.AppointmentId) ? null : request.AppointmentId.Trim();
+        existing.VisitType = request.VisitType.Trim().ToLowerInvariant();
+        existing.DoctorId = request.DoctorId.Trim();
+        existing.Date = request.Date == default ? DateTime.UtcNow.Date : request.Date.Date;
+        existing.Subtotal = subtotal;
+        existing.Discount = discount;
+        existing.Tax = tax;
+        existing.NetAmount = netAmount;
+        existing.PaidAmount = paidAmount;
+        existing.PaymentMode = request.PaymentMode.Trim().ToLowerInvariant();
+        existing.TransactionId = string.IsNullOrWhiteSpace(request.TransactionId) ? null : request.TransactionId.Trim();
+
+        existing.Items.Clear();
+        foreach (var item in sanitizedItems)
+        {
+            existing.Items.Add(new BillingItem
+            {
+                ServiceName = item.ServiceName,
+                Qty = item.Qty,
+                Rate = item.Rate,
+                Amount = item.Qty * item.Rate,
+            });
+        }
+
+        var updated = await _billingRepository.UpdateAsync(existing);
+        return MapToDto(updated);
+    }
+
     public async Task CancelAsync(string id)
     {
         if (string.IsNullOrWhiteSpace(id))

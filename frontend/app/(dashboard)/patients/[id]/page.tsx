@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import patientService, { PatientResponse } from '@/services/patientService';
 import { notify } from '@/lib/toast';
+import { isCreatedToday } from '@/lib/editWindow';
 
 export default function PatientDetailsPage() {
   const params = useParams();
@@ -76,6 +77,10 @@ export default function PatientDetailsPage() {
     ];
   }, [patient]);
 
+  const canEditPatient = useMemo(() => {
+    return patient ? isCreatedToday(patient.createdAt) : false;
+  }, [patient]);
+
   if (loading) {
     return (
       <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">
@@ -104,7 +109,12 @@ export default function PatientDetailsPage() {
           </Link>
           <Link
             href={`/patients/${patient.id}/edit`}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+              canEditPatient
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'pointer-events-none cursor-not-allowed bg-gray-200 text-gray-500'
+            }`}
+            title={canEditPatient ? 'Edit patient' : 'Only records created today can be edited'}
           >
             Edit Patient
           </Link>

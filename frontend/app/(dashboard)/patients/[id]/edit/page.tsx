@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import patientService from '@/services/patientService';
 import PatientForm, { PatientFormData } from '@/components/forms/PatientForm';
+import { notify } from '@/lib/toast';
+import { EDIT_WINDOW_MESSAGE, isCreatedToday } from '@/lib/editWindow';
 
 export default function PatientEditPage() {
   const router = useRouter();
@@ -18,6 +20,15 @@ export default function PatientEditPage() {
       try {
         setLoading(true);
         const patient = await patientService.getPatientById(Number(patientId));
+
+        if (!isCreatedToday(patient.createdAt)) {
+          notify.warning(EDIT_WINDOW_MESSAGE, {
+            id: 'patient:edit:outside-window',
+          });
+          router.push('/patients');
+          return;
+        }
+
         const dob = new Date(patient.dob);
         const isoDate = dob.toISOString().split('T')[0];
         setInitialData({

@@ -6,6 +6,7 @@ import AppointmentForm, { AppointmentFormData } from '@/components/forms/Appoint
 import appointmentService, { AppointmentReminder } from '@/services/appointmentService';
 import { notify } from '@/lib/toast';
 import { toAppointmentDateInputValue } from '@/lib/appointmentDate';
+import { EDIT_WINDOW_MESSAGE, isCreatedToday } from '@/lib/editWindow';
 
 const formatTime = (value: string) => {
   if (!value) return '';
@@ -44,6 +45,15 @@ export default function AppointmentEditPage() {
       try {
         setIsLoading(true);
         const appointment = await appointmentService.getByDisplayId(appointmentDisplayId);
+
+        if (!isCreatedToday(appointment.createdAt)) {
+          notify.warning(EDIT_WINDOW_MESSAGE, {
+            id: 'appointment:edit:outside-window',
+          });
+          router.push('/appointments');
+          return;
+        }
+
         setAppointmentId(appointment.id);
 
         setInitialData({

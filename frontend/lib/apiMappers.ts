@@ -82,6 +82,7 @@ export const mapPatient = (apiData: unknown) => {
 
   return {
     id: toNumberSafe(pick(source, ['id', 'Id']), 0),
+    createdAt: toStringSafe(pick(source, ['createdAt', 'CreatedAt'])),
     uhid: toStringSafe(pick(source, ['uhid', 'UHID', 'Uhid'])),
     patientName: toStringSafe(pick(source, ['patientName', 'PatientName', 'patient_name'])),
     dob: toStringSafe(pick(source, ['dob', 'Dob', 'dateOfBirth', 'DateOfBirth'])),

@@ -4,9 +4,7 @@ import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
 import { Plus } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
-import AddDepartmentModal from '@/components/modals/AddDepartmentModal';
 import AddDoctorModal from '@/components/modals/AddDoctorModal';
-import departmentService, { DepartmentSummary } from '@/services/departmentService';
 import doctorService, { DoctorSummary } from '@/services/doctorService';
 import patientService, { PatientSummary } from '@/services/patientService';
 
@@ -38,13 +36,6 @@ const priorityOptions = [
   { value: 'low', label: 'Low' },
 ];
 
-const priorityColors: Record<string, string> = {
-  normal: 'bg-blue-100 text-blue-700',
-  high: 'bg-orange-100 text-orange-700',
-  urgent: 'bg-red-100 text-red-700',
-  low: 'bg-gray-100 text-gray-600',
-};
-
 const statusOptions = [
   { value: 'scheduled', label: 'Scheduled' },
   { value: 'confirmed', label: 'Confirmed' },
@@ -69,47 +60,20 @@ const AppointmentDetailsSection = memo(({
 }: AppointmentDetailsSectionProps) => {
   const [query, setQuery] = useState(formData.patient_name);
   const [results, setResults] = useState<PatientSummary[]>([]);
-  const [departments, setDepartments] = useState<DepartmentSummary[]>([]);
   const [doctors, setDoctors] = useState<DoctorSummary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [isLoadingDepartments, setIsLoadingDepartments] = useState(false);
   const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
   const [hasLoadedDoctors, setHasLoadedDoctors] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [isAddDepartmentOpen, setIsAddDepartmentOpen] = useState(false);
   const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const updateSelectField = useCallback((name: 'department' | 'doctor_id', value: string) => {
-    onInputChange({
-      target: { name, value },
-    } as React.ChangeEvent<HTMLSelectElement>);
-  }, [onInputChange]);
-
-  const loadDepartments = useCallback(async () => {
-    try {
-      setIsLoadingDepartments(true);
-      const departmentData = await departmentService.getAll();
-      setDepartments(departmentData);
-    } catch {
-      setDepartments([]);
-    } finally {
-      setIsLoadingDepartments(false);
-    }
-  }, []);
-
-  const loadDoctors = useCallback(async (departmentId: string) => {
-    if (!departmentId) {
-      setDoctors([]);
-      setHasLoadedDoctors(false);
-      return;
-    }
-
+  const loadDoctors = useCallback(async () => {
     try {
       setIsLoadingDoctors(true);
       setHasLoadedDoctors(false);
-      const doctorData = await doctorService.getByDepartmentId(departmentId);
+      const doctorData = await doctorService.getAll();
       setDoctors(doctorData);
     } catch {
       setDoctors([]);
@@ -118,11 +82,6 @@ const AppointmentDetailsSection = memo(({
       setHasLoadedDoctors(true);
     }
   }, []);
-
-  const departmentOptions = departments.map((department) => ({
-    value: department.id,
-    label: department.name,
-  }));
 
   const doctorOptions = doctors.map((doctor) => ({
     value: doctor.id,
@@ -135,28 +94,8 @@ const AppointmentDetailsSection = memo(({
   }, [formData.patient_name]);
 
   useEffect(() => {
-    loadDepartments();
-  }, [loadDepartments]);
-
-  useEffect(() => {
-    loadDoctors(formData.department);
-  }, [formData.department, loadDoctors]);
-
-  useEffect(() => {
-    if (!formData.department && formData.doctor_id) {
-      updateSelectField('doctor_id', '');
-    }
-  }, [formData.department, formData.doctor_id, updateSelectField]);
-
-  useEffect(() => {
-    if (!hasLoadedDoctors || isLoadingDoctors || !formData.department) {
-      return;
-    }
-
-    if (formData.doctor_id && !doctors.some((doctor) => String(doctor.id) === String(formData.doctor_id))) {
-      updateSelectField('doctor_id', '');
-    }
-  }, [doctors, formData.department, formData.doctor_id, hasLoadedDoctors, isLoadingDoctors, updateSelectField]);
+    loadDoctors();
+  }, [loadDoctors]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -168,6 +107,13 @@ const AppointmentDetailsSection = memo(({
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  const handleDoctorChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const doctorId = e.target.value;
+    const selectedDoctor = doctors.find(d => String(d.id) === String(doctorId));
+    onInputChange({ target: { name: 'doctor_id', value: doctorId } } as React.ChangeEvent<HTMLSelectElement>);
+    onInputChange({ target: { name: 'department', value: selectedDoctor?.departmentId ?? '' } } as React.ChangeEvent<HTMLSelectElement>);
+  }, [doctors, onInputChange]);
 
   const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -338,47 +284,19 @@ const AppointmentDetailsSection = memo(({
           />
         </div>
 
-        {/* Department */}
-        <div className="col-span-12 sm:col-span-6">
-          <Select
-            label="Department"
-            name="department"
-            value={formData.department}
-            onChange={onInputChange}
-            options={departmentOptions}
-            required
-            error={errors.department}
-            disabled={isLoadingDepartments}
-          />
-          {isLoadingDepartments && (
-            <p className="mt-1 text-xs text-gray-500">Loading departments...</p>
-          )}
-          <button
-            type="button"
-            onClick={() => setIsAddDepartmentOpen(true)}
-            className="mt-2 flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Add Department
-          </button>
-        </div>
-
         {/* Doctor */}
         <div className="col-span-12 sm:col-span-6">
           <Select
             label="Doctor"
             name="doctor_id"
             value={formData.doctor_id}
-            onChange={onInputChange}
+            onChange={handleDoctorChange}
             options={doctorOptions}
             required
             error={errors.doctor_id}
-            disabled={!formData.department || isLoadingDoctors}
+            disabled={isLoadingDoctors}
           />
-          {!formData.department && (
-            <p className="mt-1 text-xs text-gray-500">Select a department first to load doctors.</p>
-          )}
-          {formData.department && isLoadingDoctors && (
+          {isLoadingDoctors && (
             <p className="mt-1 text-xs text-gray-500">Loading doctors...</p>
           )}
           <button
@@ -401,6 +319,7 @@ const AppointmentDetailsSection = memo(({
             name="appointment_date"
             value={formData.appointment_date}
             onChange={onInputChange}
+            min={new Date().toISOString().split('T')[0]}
             className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
               errors.appointment_date ? 'border-red-400 bg-red-50' : 'border-gray-300'
             }`}
@@ -418,30 +337,14 @@ const AppointmentDetailsSection = memo(({
         </div>
 
         {/* Priority */}
-        <div className="col-span-12 sm:col-span-7">
-          <label className="block text-sm font-medium text-gray-700 mb-3">Priority</label>
-          <div className="flex flex-wrap gap-3">
-            {priorityOptions.map(option => (
-              <label
-                key={option.value}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all text-sm font-medium ${
-                  formData.priority === option.value
-                    ? `${priorityColors[option.value]} border-transparent ring-2 ring-offset-1 ring-current`
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="priority"
-                  value={option.value}
-                  checked={formData.priority === option.value}
-                  onChange={onInputChange}
-                  className="sr-only"
-                />
-                {option.label}
-              </label>
-            ))}
-          </div>
+        <div className="col-span-12 sm:col-span-3">
+          <Select
+            label="Priority"
+            name="priority"
+            value={formData.priority}
+            onChange={onInputChange}
+            options={priorityOptions}
+          />
         </div>
 
         {/* Status */}
@@ -484,19 +387,11 @@ const AppointmentDetailsSection = memo(({
 
       </div>
 
-      {/* Add Department Modal */}
-      <AddDepartmentModal
-        isOpen={isAddDepartmentOpen}
-        onClose={() => setIsAddDepartmentOpen(false)}
-        onSuccess={loadDepartments}
-      />
-
       {/* Add Doctor Modal */}
       <AddDoctorModal
         isOpen={isAddDoctorOpen}
         onClose={() => setIsAddDoctorOpen(false)}
-        defaultDepartmentId={formData.department}
-        onSuccess={() => loadDoctors(formData.department)}
+        onSuccess={loadDoctors}
       />
     </div>
   );

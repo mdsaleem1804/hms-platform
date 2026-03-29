@@ -36,6 +36,9 @@ public class AppointmentRepository : IAppointmentRepository
     {
         _dbContext.Appointments.Add(appointment);
         await _dbContext.SaveChangesAsync();
+        // Use the DB-generated display_id for a collision-free appointment number
+        appointment.AppointmentNo = $"APT-{appointment.AppointmentDate:yyyyMMdd}-{appointment.DisplayId:D4}";
+        await _dbContext.SaveChangesAsync();
         return await GetByIdAsync(appointment.Id) ?? appointment;
     }
 

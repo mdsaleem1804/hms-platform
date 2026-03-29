@@ -286,7 +286,17 @@ System should allow selling modules independently or bundled
 
 ---
 
-## 21. Sidebar Rules
+## 21. Edit Window Rule
+
+* Editing is allowed only for records created today
+* This rule must be enforced in backend update logic for security
+* Frontend must disable edit actions for records outside the allowed window
+* Frontend edit pages must block direct URL access for records outside the allowed window
+* Admin and Super Admin exception will be implemented in a later phase
+
+---
+
+## 22. Sidebar Rules
 
 * Sidebar must support collapse/expand
 
@@ -303,7 +313,7 @@ System should allow selling modules independently or bundled
 
 ---
 
-## 22. File Upload Rules
+## 23. File Upload Rules
 
 * Patient form must support profile photo upload
 * Show image preview instantly
@@ -312,7 +322,7 @@ System should allow selling modules independently or bundled
 
 ---
 
-## 23. Form Density Rule
+## 24. Form Density Rule
 
 * Forms must be compact and efficient
 * Avoid excessive spacing between fields
@@ -320,7 +330,7 @@ System should allow selling modules independently or bundled
 
 ---
 
-## 24. Mode of Arrival UX Rule
+## 25. Mode of Arrival UX Rule
 
 * Do NOT replicate paper form UI directly
 
@@ -335,7 +345,7 @@ System should allow selling modules independently or bundled
 
 ---
 
-## 25. Layout Consistency
+## 26. Layout Consistency
 
 * All pages must follow same layout:
 
