@@ -54,6 +54,13 @@ export default function Patients() {
     setPage(1);
   };
 
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setGender('');
+    setStatus('');
+    setPage(1);
+  };
+
   const handleExportCsv = () => {
     if (!safePatients.length) {
       toast.error('No patient records available to export');
@@ -270,6 +277,7 @@ export default function Patients() {
         onGenderChange={handleGenderChange}
         statusValue={status}
         onStatusChange={handleStatusChange}
+        onClearFilters={handleClearFilters}
         onExportCsv={handleExportCsv}
         onExportPdf={handleExportPdf}
         onPrint={handlePrint}

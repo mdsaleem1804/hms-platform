@@ -107,6 +107,41 @@ public class BillingRepository : IBillingRepository
         return await BaseQuery().FirstOrDefaultAsync(billing => billing.BillNumber == normalized);
     }
 
+    public async Task<Dictionary<string, string>> GetPaymentStatusesByAppointmentIdsAsync(IEnumerable<string> appointmentIds)
+    {
+        var normalizedIds = appointmentIds
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        if (normalizedIds.Length == 0)
+        {
+            return new Dictionary<string, string>(StringComparer.Ordinal);
+        }
+
+        var bills = await _context.Billings
+            .AsNoTracking()
+            .Where(billing =>
+                !billing.IsDeleted &&
+                billing.AppointmentId != null &&
+                normalizedIds.Contains(billing.AppointmentId))
+            .Select(billing => new
+            {
+                AppointmentId = billing.AppointmentId!,
+                billing.NetAmount,
+                billing.PaidAmount,
+            })
+            .ToListAsync();
+
+        return bills
+            .GroupBy(item => item.AppointmentId, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group => ResolveGroupedPaymentStatus(group.Select(item => ResolvePaymentStatus(item.NetAmount, item.PaidAmount))),
+                StringComparer.Ordinal);
+    }
+
     public async Task<string> GetNextBillNumberAsync()
     {
         var numbers = await _context.Billings
@@ -168,5 +203,42 @@ public class BillingRepository : IBillingRepository
             .Include(billing => billing.Appointment)
             .Include(billing => billing.Items)
             .Where(billing => !billing.IsDeleted);
+    }
+
+    private static string ResolvePaymentStatus(decimal netAmount, decimal paidAmount)
+    {
+        if (paidAmount <= 0m)
+        {
+            return "Pending";
+        }
+
+        if (paidAmount >= netAmount && netAmount > 0m)
+        {
+            return "Paid";
+        }
+
+        return "Partial";
+    }
+
+    private static string ResolveGroupedPaymentStatus(IEnumerable<string> statuses)
+    {
+        var distinctStatuses = statuses.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (distinctStatuses.Contains("Paid"))
+        {
+            return "Paid";
+        }
+
+        if (distinctStatuses.Contains("Partial"))
+        {
+            return "Partial";
+        }
+
+        if (distinctStatuses.Contains("Pending"))
+        {
+            return "Pending";
+        }
+
+        return "Not Billed";
     }
 }

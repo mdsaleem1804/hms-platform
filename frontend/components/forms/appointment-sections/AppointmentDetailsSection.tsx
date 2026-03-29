@@ -1,6 +1,7 @@
 'use client';
 
 import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -256,6 +257,15 @@ const AppointmentDetailsSection = memo(({
           {errors.patient_name && (
             <p className="mt-1 text-xs text-red-500">{errors.patient_name}</p>
           )}
+          <Link
+            href="/patients/register"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Patient
+          </Link>
         </div>
 
         {/* Patient UHID — auto-filled on select */}

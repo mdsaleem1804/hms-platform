@@ -152,6 +152,7 @@ export const mapAppointment = (apiData: unknown) => {
     visitType: toStringSafe(pick(source, ['visitType', 'VisitType'])),
     priority: toStringSafe(pick(source, ['priority', 'Priority'])),
     notes: toStringSafe(pick(source, ['notes', 'Notes'])),
+    opdPaymentStatus: toStringSafe(pick(source, ['opdPaymentStatus', 'OpdPaymentStatus']), 'Not Billed'),
     createdAt: toStringSafe(pick(source, ['createdAt', 'CreatedAt'])),
     reminders: remindersArray.map((rawReminder) => {
       const reminder = asRecord(rawReminder);

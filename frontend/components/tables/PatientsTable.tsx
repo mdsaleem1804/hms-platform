@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { CalendarPlus, Eye, Pencil } from 'lucide-react';
 import { PatientResponse } from '@/services/patientService';
-import { isCreatedToday } from '@/lib/editWindow';
 
 interface PatientsTableProps {
   patients: PatientResponse[];
@@ -53,7 +52,6 @@ export default function PatientsTable({ patients = [] }: PatientsTableProps) {
         </thead>
         <tbody>
           {patients.map((patient, index) => {
-            const isEditable = isCreatedToday(patient.createdAt);
             return (
             <tr
               key={patient.id}
@@ -99,12 +97,8 @@ export default function PatientsTable({ patients = [] }: PatientsTableProps) {
                   </Link>
                 <Link
                   href={`/patients/${patient.id}/edit`}
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded border transition ${
-                    isEditable
-                      ? 'border-blue-200 text-blue-700 hover:bg-blue-50'
-                      : 'cursor-not-allowed border-gray-200 text-gray-300 pointer-events-none'
-                  }`}
-                  title={isEditable ? 'Edit patient' : 'Only records created today can be edited'}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded border border-blue-200 text-blue-700 transition hover:bg-blue-50"
+                  title="Edit patient"
                   aria-label="Edit patient"
                 >
                   <Pencil size={15} />

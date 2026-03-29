@@ -11,6 +11,7 @@ interface PatientsToolbarProps {
   onGenderChange: (value: string) => void;
   statusValue: string;
   onStatusChange: (value: string) => void;
+  onClearFilters?: () => void;
   onExportCsv: () => void;
   onExportPdf: () => void;
   onPrint: () => void;
@@ -23,6 +24,7 @@ export default function PatientsToolbar({
   onGenderChange,
   statusValue,
   onStatusChange,
+  onClearFilters,
   onExportCsv,
   onExportPdf,
   onPrint,
@@ -82,6 +84,15 @@ export default function PatientsToolbar({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <button
+            type="button"
+            onClick={onClearFilters}
+            disabled={!hasFilters}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Clear Filters
+          </button>
+
           <div className="relative">
             <button
               type="button"

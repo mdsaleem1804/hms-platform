@@ -23,38 +23,69 @@ public class AppointmentService : IAppointmentService
     };
 
     private readonly IAppointmentRepository _appointmentRepository;
+    private readonly IBillingRepository _billingRepository;
     private readonly IPatientRepository _patientRepository;
     private readonly IDoctorRepository _doctorRepository;
     private readonly IDepartmentRepository _departmentRepository;
 
     public AppointmentService(
         IAppointmentRepository appointmentRepository,
+        IBillingRepository billingRepository,
         IPatientRepository patientRepository,
         IDoctorRepository doctorRepository,
         IDepartmentRepository departmentRepository)
     {
         _appointmentRepository = appointmentRepository;
+        _billingRepository = billingRepository;
         _patientRepository = patientRepository;
         _doctorRepository = doctorRepository;
         _departmentRepository = departmentRepository;
     }
 
-    public async Task<List<AppointmentDto>> GetAllAppointmentsAsync()
+    public async Task<List<AppointmentDto>> GetAllAppointmentsAsync(AppointmentListQueryDto query)
     {
-        var appointments = await _appointmentRepository.GetAllAsync();
-        return appointments.Select(MapToDto).ToList();
+        query ??= new AppointmentListQueryDto();
+
+        var appointments = await _appointmentRepository.GetAllAsync(
+            query.Search,
+            query.Status,
+            query.DoctorId,
+            query.DepartmentId,
+            query.FromDate,
+            query.ToDate);
+
+        var paymentStatuses = await _billingRepository.GetPaymentStatusesByAppointmentIdsAsync(
+            appointments.Select(appointment => appointment.Id));
+
+        return appointments
+            .Select(appointment => MapToDto(
+                appointment,
+                paymentStatuses.TryGetValue(appointment.Id, out var paymentStatus) ? paymentStatus : "Not Billed"))
+            .ToList();
     }
 
     public async Task<AppointmentDto?> GetAppointmentByIdAsync(string id)
     {
         var appointment = await _appointmentRepository.GetByIdAsync(id);
-        return appointment == null ? null : MapToDto(appointment);
+        if (appointment == null)
+        {
+            return null;
+        }
+
+        var paymentStatuses = await _billingRepository.GetPaymentStatusesByAppointmentIdsAsync([appointment.Id]);
+        return MapToDto(appointment, paymentStatuses.TryGetValue(appointment.Id, out var paymentStatus) ? paymentStatus : "Not Billed");
     }
 
     public async Task<AppointmentDto?> GetAppointmentByDisplayIdAsync(int displayId)
     {
         var appointment = await _appointmentRepository.GetByDisplayIdAsync(displayId);
-        return appointment == null ? null : MapToDto(appointment);
+        if (appointment == null)
+        {
+            return null;
+        }
+
+        var paymentStatuses = await _billingRepository.GetPaymentStatusesByAppointmentIdsAsync([appointment.Id]);
+        return MapToDto(appointment, paymentStatuses.TryGetValue(appointment.Id, out var paymentStatus) ? paymentStatus : "Not Billed");
     }
 
     public async Task<AppointmentDto> CreateAppointmentAsync(CreateAppointmentDto request)
@@ -189,12 +220,6 @@ public class AppointmentService : IAppointmentService
             throw new ArgumentException("End time must be later than start time", nameof(request.EndTime));
         }
 
-        var hasConflict = await _appointmentRepository.HasConflictAsync(doctor.Id, appointmentDate, startTime, endTime, appointmentId);
-        if (hasConflict)
-        {
-            throw new InvalidOperationException("The selected doctor already has an overlapping appointment for this time slot");
-        }
-
         ValidateReminders(request.Reminders);
 
         return (patient, doctor, department, appointmentDate, startTime, endTime);
@@ -261,7 +286,7 @@ public class AppointmentService : IAppointmentService
         return string.IsNullOrWhiteSpace(priority) ? "normal" : priority.Trim().ToLowerInvariant();
     }
 
-    private static AppointmentDto MapToDto(Appointment appointment)
+    private static AppointmentDto MapToDto(Appointment appointment, string opdPaymentStatus = "Not Billed")
     {
         return new AppointmentDto
         {
@@ -284,6 +309,7 @@ public class AppointmentService : IAppointmentService
             VisitType = appointment.VisitType,
             Priority = appointment.Priority,
             Notes = appointment.Notes,
+            OpdPaymentStatus = opdPaymentStatus,
             CreatedAt = appointment.CreatedAt,
             Reminders = appointment.Reminders
                 .OrderBy(reminder => reminder.Channel)

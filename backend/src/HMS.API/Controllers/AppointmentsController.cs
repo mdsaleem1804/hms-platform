@@ -19,10 +19,26 @@ public class AppointmentsController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ApiResponse<List<AppointmentDto>>>> GetAll()
+    public async Task<ActionResult<ApiResponse<List<AppointmentDto>>>> GetAll(
+        [FromQuery(Name = "q")] string? search,
+        [FromQuery] string? status,
+        [FromQuery] string? doctorId,
+        [FromQuery] string? departmentId,
+        [FromQuery] DateTime? fromDate,
+        [FromQuery] DateTime? toDate)
     {
         _logger.LogInformation("Fetching all appointments");
-        var appointments = await _appointmentService.GetAllAppointmentsAsync();
+
+        var appointments = await _appointmentService.GetAllAppointmentsAsync(new AppointmentListQueryDto
+        {
+            Search = search,
+            Status = status,
+            DoctorId = doctorId,
+            DepartmentId = departmentId,
+            FromDate = fromDate,
+            ToDate = toDate,
+        });
+
         return Ok(ApiResponse<List<AppointmentDto>>.SuccessResponse(appointments, "Appointments retrieved successfully"));
     }
 

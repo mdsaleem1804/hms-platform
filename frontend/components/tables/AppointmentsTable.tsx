@@ -11,6 +11,7 @@ interface AppointmentsTableProps {
 
 export default function AppointmentsTable({ appointments }: AppointmentsTableProps) {
   const canCreateOpdBill = (status: string) => status.toLowerCase() === 'confirmed';
+  const isOpdBillPaid = (opdPaymentStatus: string) => opdPaymentStatus.toLowerCase() === 'paid';
 
   const isPreviousAppointmentDate = (appointmentDate: string) => {
     const appointmentDay = toAppointmentDateInputValue(appointmentDate);
@@ -59,6 +60,19 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
     }
   };
 
+  const getOpdPaymentStatusColor = (opdPaymentStatus: string) => {
+    switch (opdPaymentStatus.toLowerCase()) {
+      case 'paid':
+        return 'bg-emerald-100 text-emerald-700';
+      case 'partial':
+        return 'bg-blue-100 text-blue-700';
+      case 'pending':
+        return 'bg-amber-100 text-amber-700';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  };
+
   return (
     <table className="w-full">
       <thead className="bg-gray-50 border-b">
@@ -78,6 +92,9 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
             Status
           </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+            OPD Payment
+          </th>
           <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
             Actions
           </th>
@@ -88,7 +105,8 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
           const isEditable = isCreatedToday(appointment.createdAt);
           const showOpdBillAction = canCreateOpdBill(appointment.status);
           const isPastAppointment = isPreviousAppointmentDate(appointment.appointmentDate);
-          const isOpdBillEnabled = showOpdBillAction && !isPastAppointment;
+          const isPaid = isOpdBillPaid(appointment.opdPaymentStatus);
+          const isOpdBillEnabled = showOpdBillAction && !isPastAppointment && !isPaid;
 
           return (
           <tr key={appointment.id} className="hover:bg-gray-50">
@@ -119,9 +137,14 @@ export default function AppointmentsTable({ appointments }: AppointmentsTablePro
                 </span>
               </div>
             </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm">
+              <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getOpdPaymentStatusColor(appointment.opdPaymentStatus)}`}>
+                {appointment.opdPaymentStatus}
+              </span>
+            </td>
             <td className="px-6 py-4 whitespace-nowrap text-right">
               <div className="inline-flex items-center gap-2">
-                {showOpdBillAction && (
+                {showOpdBillAction && !isPaid && (
                   isOpdBillEnabled ? (
                     <Link
                       href={buildOpdBillingHref(appointment)}

@@ -109,7 +109,7 @@ export default function AppointmentEditPage() {
         })),
       });
 
-      router.push('/appointments');
+      router.replace('/appointments');
     } catch {
       // Toast is handled centrally by appointmentService.
     } finally {

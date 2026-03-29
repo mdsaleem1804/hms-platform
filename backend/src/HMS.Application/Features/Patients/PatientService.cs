@@ -163,11 +163,6 @@ public class PatientService : IPatientService
             throw new KeyNotFoundException($"Patient with ID {id} not found");
         }
 
-        if (existingPatient.CreatedAt.Date != DateTime.UtcNow.Date)
-        {
-            throw new InvalidOperationException("Editing is allowed only for records created today");
-        }
-
         // Check for duplicate mobile if mobile is different
         if (existingPatient.Mobile != request.Mobile)
         {
@@ -201,13 +196,7 @@ public class PatientService : IPatientService
 
     public async Task<bool> DeletePatientAsync(long id)
     {
-        var patient = await _patientRepository.GetByIdAsync(id);
-        if (patient == null)
-        {
-            throw new KeyNotFoundException($"Patient with ID {id} not found");
-        }
-
-        return await _patientRepository.DeleteAsync(id);
+        throw new InvalidOperationException("Patient deletion is not allowed");
     }
 
     private PatientDto MapToDto(Patient patient)

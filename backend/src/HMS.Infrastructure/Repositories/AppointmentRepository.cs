@@ -14,9 +14,59 @@ public class AppointmentRepository : IAppointmentRepository
         _dbContext = dbContext;
     }
 
-    public async Task<List<Appointment>> GetAllAsync()
+    public async Task<List<Appointment>> GetAllAsync(
+        string? search = null,
+        string? status = null,
+        string? doctorId = null,
+        string? departmentId = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null)
     {
-        return await BaseQuery()
+        var query = BaseQuery();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var trimmed = search.Trim();
+            query = query.Where(appointment =>
+                EF.Functions.ILike(appointment.AppointmentNo, $"%{trimmed}%") ||
+                (appointment.Patient != null && (
+                    EF.Functions.ILike(appointment.Patient.PatientName, $"%{trimmed}%") ||
+                    EF.Functions.ILike(appointment.Patient.Uhid, $"%{trimmed}%") ||
+                    EF.Functions.ILike(appointment.Patient.Mobile, $"%{trimmed}%"))) ||
+                (appointment.Doctor != null && EF.Functions.ILike(appointment.Doctor.Name, $"%{trimmed}%")));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            var statusValue = status.Trim().ToLowerInvariant();
+            query = query.Where(appointment => appointment.Status.ToLower() == statusValue);
+        }
+
+        if (!string.IsNullOrWhiteSpace(doctorId))
+        {
+            var doctorIdValue = doctorId.Trim();
+            query = query.Where(appointment => appointment.DoctorId == doctorIdValue);
+        }
+
+        if (!string.IsNullOrWhiteSpace(departmentId))
+        {
+            var departmentIdValue = departmentId.Trim();
+            query = query.Where(appointment => appointment.Doctor != null && appointment.Doctor.DepartmentId == departmentIdValue);
+        }
+
+        if (fromDate.HasValue)
+        {
+            var from = fromDate.Value.Date;
+            query = query.Where(appointment => appointment.AppointmentDate.Date >= from);
+        }
+
+        if (toDate.HasValue)
+        {
+            var to = toDate.Value.Date;
+            query = query.Where(appointment => appointment.AppointmentDate.Date <= to);
+        }
+
+        return await query
             .OrderByDescending(appointment => appointment.AppointmentDate)
             .ThenByDescending(appointment => appointment.StartTime)
             .ToListAsync();

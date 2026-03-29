@@ -33,6 +33,7 @@ export interface Appointment {
   visitType: string;
   priority: string;
   notes: string;
+  opdPaymentStatus: string;
   createdAt: string;
   reminders: AppointmentReminder[];
 }
@@ -53,6 +54,11 @@ export interface CreateAppointmentRequest {
 
 export interface AppointmentListParams {
   q?: string;
+  status?: string;
+  doctorId?: string;
+  departmentId?: string;
+  fromDate?: string;
+  toDate?: string;
 }
 
 class AppointmentService {
@@ -61,6 +67,11 @@ class AppointmentService {
       const response = await apiClient.get<any>('/api/appointments', {
         params: {
           q: params.q || undefined,
+          status: params.status || undefined,
+          doctorId: params.doctorId || undefined,
+          departmentId: params.departmentId || undefined,
+          fromDate: params.fromDate || undefined,
+          toDate: params.toDate || undefined,
         },
       });
       debugApiResponse('appointments.list', response.data);

@@ -520,18 +520,18 @@ export default function CreateOpdBillingPage() {
         toast.success(`Bill ${updatedBill.billNumber} updated successfully!`);
 
         if (printAfterSave) {
-          router.push(`/billing/opd/view/${updatedBill.id}?print=true`);
+          router.replace(`/billing/opd/view/${updatedBill.id}?print=true`);
         } else {
-          router.push(`/billing/opd/view/${updatedBill.id}`);
+          router.replace(`/billing/opd/view/${updatedBill.id}`);
         }
       } else {
         const createdBill = await billingService.create(payload);
         toast.success(`Bill ${createdBill.billNumber} created successfully!`);
 
         if (printAfterSave) {
-          router.push(`/billing/opd/view/${createdBill.id}?print=true`);
+          router.replace(`/billing/opd/view/${createdBill.id}?print=true`);
         } else {
-          router.push(`/billing/opd/view/${createdBill.id}`);
+          router.replace(`/billing/opd/view/${createdBill.id}`);
         }
       }
     } catch (error: unknown) {

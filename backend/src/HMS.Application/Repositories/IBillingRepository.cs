@@ -15,6 +15,7 @@ public interface IBillingRepository
         int pageSize);
     Task<Billing?> GetByIdAsync(string id);
     Task<Billing?> GetByBillNumberAsync(string billNumber);
+    Task<Dictionary<string, string>> GetPaymentStatusesByAppointmentIdsAsync(IEnumerable<string> appointmentIds);
     Task<string> GetNextBillNumberAsync();
     Task<Billing> CreateAsync(Billing billing);
     Task<Billing> UpdateAsync(Billing billing);

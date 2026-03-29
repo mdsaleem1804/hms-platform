@@ -86,6 +86,15 @@ export default function OpdBillingListPage() {
     setPage(1);
   };
 
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setStatus('');
+    setDoctorId('');
+    setFromDate('');
+    setToDate('');
+    setPage(1);
+  };
+
   const handleExportExcel = () => {
     if (!billings.length) {
       toast.error('No billing records available to export');
@@ -226,6 +235,7 @@ export default function OpdBillingListPage() {
         onFromDateChange={handleFromDateChange}
         onToDateChange={handleToDateChange}
         doctors={doctors}
+        onClearFilters={handleClearFilters}
         onExportExcel={handleExportExcel}
         onPrint={handlePrint}
       />

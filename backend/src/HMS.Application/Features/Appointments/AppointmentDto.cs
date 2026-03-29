@@ -34,6 +34,7 @@ public class AppointmentDto
     public string VisitType { get; set; } = string.Empty;
     public string Priority { get; set; } = string.Empty;
     public string Notes { get; set; } = string.Empty;
+    public string OpdPaymentStatus { get; set; } = "Not Billed";
     public DateTime CreatedAt { get; set; }
     public List<AppointmentReminderDto> Reminders { get; set; } = new();
 }
@@ -55,4 +56,14 @@ public class CreateAppointmentDto
 
 public class UpdateAppointmentDto : CreateAppointmentDto
 {
+}
+
+public class AppointmentListQueryDto
+{
+    public string? Search { get; set; }
+    public string? Status { get; set; }
+    public string? DoctorId { get; set; }
+    public string? DepartmentId { get; set; }
+    public DateTime? FromDate { get; set; }
+    public DateTime? ToDate { get; set; }
 }

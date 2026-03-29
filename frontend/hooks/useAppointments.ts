@@ -23,7 +23,14 @@ export const useAppointments = (params: AppointmentListParams = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [params.q]);
+  }, [
+    params.q,
+    params.status,
+    params.doctorId,
+    params.departmentId,
+    params.fromDate,
+    params.toDate,
+  ]);
 
   useEffect(() => {
     fetchAppointments();

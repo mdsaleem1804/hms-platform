@@ -17,6 +17,7 @@ interface BillingListToolbarProps {
   onFromDateChange: (value: string) => void;
   onToDateChange: (value: string) => void;
   doctors: DoctorSummary[];
+  onClearFilters?: () => void;
   onExportExcel: () => void;
   onPrint: () => void;
 }
@@ -33,6 +34,7 @@ export default function BillingListToolbar({
   onFromDateChange,
   onToDateChange,
   doctors,
+  onClearFilters,
   onExportExcel,
   onPrint,
 }: BillingListToolbarProps) {
@@ -118,6 +120,15 @@ export default function BillingListToolbar({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <button
+            type="button"
+            onClick={onClearFilters}
+            disabled={!hasFilters}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Clear Filters
+          </button>
+
           <div className="relative">
             <button
               type="button"

@@ -2,7 +2,7 @@ namespace HMS.Application.Features.Appointments;
 
 public interface IAppointmentService
 {
-    Task<List<AppointmentDto>> GetAllAppointmentsAsync();
+    Task<List<AppointmentDto>> GetAllAppointmentsAsync(AppointmentListQueryDto query);
     Task<AppointmentDto?> GetAppointmentByIdAsync(string id);
     Task<AppointmentDto?> GetAppointmentByDisplayIdAsync(int displayId);
     Task<AppointmentDto> CreateAppointmentAsync(CreateAppointmentDto request);

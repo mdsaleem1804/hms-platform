@@ -159,7 +159,6 @@ export interface PatientServiceType {
   getPatients(params?: PatientListParams): Promise<PagedPatientResult>;
   getPatientById(id: number): Promise<PatientResponse>;
   updatePatient(id: number, data: CreatePatientPayload): Promise<PatientResponse>;
-  deletePatient(id: number): Promise<void>;
   searchPatients(query: string, limit?: number): Promise<PatientSummary[]>;
 }
 
@@ -271,24 +270,6 @@ const patientService: PatientServiceType = {
       const message = handleApiError(error, {
         fallbackMessage: 'Failed to update patient',
         toastId: 'patient:update:error',
-      });
-      throw new Error(message);
-    }
-  },
-
-  async deletePatient(id: number): Promise<void> {
-    try {
-      const response = await apiClient.delete<ApiResponse<null>>(`/api/patients/${id}`);
-      debugApiResponse('patients.delete', response.data);
-      handleApiResponse(response, {
-        successMessage: 'Patient deleted successfully',
-        successToastId: 'patient:delete:success',
-        errorToastId: 'patient:delete:error',
-      });
-    } catch (error) {
-      const message = handleApiError(error, {
-        fallbackMessage: 'Failed to delete patient',
-        toastId: 'patient:delete:error',
       });
       throw new Error(message);
     }
