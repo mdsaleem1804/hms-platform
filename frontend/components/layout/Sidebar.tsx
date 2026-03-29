@@ -12,7 +12,6 @@ import {
   Stethoscope,
   Pill,
   Microscope,
-  ImageIcon,
   Droplets,
   Ambulance,
   DollarSign,
@@ -21,9 +20,7 @@ import {
   Activity,
   Package,
   Calendar,
-  MessageSquare,
   BarChart3,
-  Database,
   Settings,
 } from 'lucide-react';
 
@@ -53,13 +50,13 @@ export default function Sidebar() {
     },
     {
       name: 'Reception & Registration',
-      path: '/appointments', //reception-registration
+      path: '/appointments',
       icon: <UserCheck className="h-5 w-5" />,
       category: 'Patient Management',
     },
     {
       name: 'Out Patient (OPD)',
-      path: '/billing/opd',
+      path: '/opd',
       icon: <ClipboardList className="h-5 w-5" />,
       category: 'Clinical',
     },
@@ -76,21 +73,33 @@ export default function Sidebar() {
       category: 'Clinical',
     },
     {
+      name: 'ICU',
+      path: '/icu',
+      icon: <Activity className="h-5 w-5" />,
+      category: 'Clinical',
+    },
+    {
+      name: 'Emergency & Casualty',
+      path: '/emergency',
+      icon: <Activity className="h-5 w-5" />,
+      category: 'Clinical',
+    },
+    {
+      name: 'Doctor Schedules',
+      path: '/schedules',
+      icon: <Calendar className="h-5 w-5" />,
+      category: 'Clinical',
+    },
+    {
       name: 'Pharmacy',
       path: '/pharmacy',
       icon: <Pill className="h-5 w-5" />,
       category: 'Services',
     },
     {
-      name: 'Central Laboratory',
-      path: '/laboratory',
+      name: 'Laboratory',
+      path: '/lab',
       icon: <Microscope className="h-5 w-5" />,
-      category: 'Services',
-    },
-    {
-      name: 'Radiology',
-      path: '/radiology',
-      icon: <ImageIcon className="h-5 w-5" />,
       category: 'Services',
     },
     {
@@ -118,14 +127,20 @@ export default function Sidebar() {
       category: 'Administration',
     },
     {
-      name: 'HR Management',
-      path: '/hr',
+      name: 'Staff Management',
+      path: '/staff',
       icon: <Users2 className="h-5 w-5" />,
       category: 'Administration',
     },
     {
-      name: 'Activity Log',
-      path: '/activity-log',
+      name: 'Role Management',
+      path: '/roles',
+      icon: <Users2 className="h-5 w-5" />,
+      category: 'Administration',
+    },
+    {
+      name: 'Audit & Logs',
+      path: '/audit',
       icon: <Activity className="h-5 w-5" />,
       category: 'Administration',
     },
@@ -136,27 +151,9 @@ export default function Sidebar() {
       category: 'Operations',
     },
     {
-      name: 'Programmes & Calendar',
-      path: '/programmes-calendar',
-      icon: <Calendar className="h-5 w-5" />,
-      category: 'Operations',
-    },
-    {
-      name: 'Messages & Notifications',
-      path: '/messages',
-      icon: <MessageSquare className="h-5 w-5" />,
-      category: 'Communication',
-    },
-    {
       name: 'Reports',
       path: '/reports',
       icon: <BarChart3 className="h-5 w-5" />,
-      category: 'Analytics',
-    },
-    {
-      name: 'E-MRD',
-      path: '/e-mrd',
-      icon: <Database className="h-5 w-5" />,
       category: 'Analytics',
     },
     {
