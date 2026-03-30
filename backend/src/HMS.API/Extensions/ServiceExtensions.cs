@@ -52,6 +52,10 @@ public static class ServiceExtensions
         services.AddScoped<IDoctorService, DoctorService>();
         services.AddScoped<IDoctorRepository, DoctorRepository>();
 
+        // Doctor Service Rates Services
+        services.AddScoped<IDoctorServiceRateService, DoctorServiceRateService>();
+        services.AddScoped<IDoctorServiceRateRepository, DoctorServiceRateRepository>();
+
         // JWT Configuration
         var jwtSettings = configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"];

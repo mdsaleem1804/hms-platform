@@ -94,10 +94,23 @@ public class AppointmentRepository : IAppointmentRepository
 
     public async Task<Appointment> UpdateAsync(Appointment appointment)
     {
-        appointment.UpdatedAt = DateTime.UtcNow;
-        _dbContext.Appointments.Update(appointment);
-        await _dbContext.SaveChangesAsync();
-        return await GetByIdAsync(appointment.Id) ?? appointment;
+        try
+        {
+            appointment.UpdatedAt = DateTime.UtcNow;
+            _dbContext.Appointments.Update(appointment);
+            await _dbContext.SaveChangesAsync();
+            return await GetByIdAsync(appointment.Id) ?? appointment;
+        }
+        catch (Exception ex)
+        {
+            // Log the inner exception details for debugging
+            Console.WriteLine($"UpdateAsync Error: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+            }
+            throw;
+        }
     }
 
     public async Task DeleteAsync(string id)

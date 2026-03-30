@@ -17,6 +17,7 @@ export interface DoctorSummary {
   name: string;
   specialization: string;
   departmentId: string;
+  mobile: string;
 }
 
 export interface CreateDoctorRequest {

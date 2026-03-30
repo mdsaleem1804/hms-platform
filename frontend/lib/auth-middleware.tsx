@@ -1,7 +1,7 @@
 'use client';
 
 import { useContext, useEffect, ReactNode } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { AuthContext, UserRole } from '@/context/AuthContext';
 
 interface ProtectedRouteProps {
@@ -15,7 +15,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const authContext = useContext(AuthContext);
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     if (!authContext?.isAuthenticated) {

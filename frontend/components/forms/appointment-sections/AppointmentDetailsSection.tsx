@@ -64,7 +64,6 @@ const AppointmentDetailsSection = memo(({
   const [doctors, setDoctors] = useState<DoctorSummary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
-  const [hasLoadedDoctors, setHasLoadedDoctors] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,14 +72,12 @@ const AppointmentDetailsSection = memo(({
   const loadDoctors = useCallback(async () => {
     try {
       setIsLoadingDoctors(true);
-      setHasLoadedDoctors(false);
       const doctorData = await doctorService.getAll();
       setDoctors(doctorData);
     } catch {
       setDoctors([]);
     } finally {
       setIsLoadingDoctors(false);
-      setHasLoadedDoctors(true);
     }
   }, []);
 

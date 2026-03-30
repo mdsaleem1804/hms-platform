@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 
 namespace HMS.API.Extensions;
 
@@ -72,12 +73,53 @@ public class GlobalExceptionMiddleware
             ArgumentException or ArgumentNullException => (StatusCodes.Status400BadRequest, exception.Message),
             InvalidOperationException => (StatusCodes.Status400BadRequest, exception.Message),
             
+            // Database exceptions → 400 Bad Request with detailed info
+            DbUpdateException dbEx => GetDbUpdateExceptionDetails(dbEx),
+            
             // Not found exceptions → 404 Not Found
             KeyNotFoundException => (StatusCodes.Status404NotFound, exception.Message),
             
             // Generic exception → 500 Internal Server Error
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred. Please try again later.")
         };
+    }
+
+    /// <summary>
+    /// Extracts detailed information from DbUpdateException for better error reporting
+    /// </summary>
+    private static (int StatusCode, string Message) GetDbUpdateExceptionDetails(DbUpdateException dbEx)
+    {
+        var message = "Database update failed. ";
+        
+        if (dbEx.InnerException is not null)
+        {
+            message += dbEx.InnerException.Message;
+        }
+        else
+        {
+            message += dbEx.Message;
+        }
+
+        // Check for specific constraint violation patterns
+        if (message.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase))
+        {
+            return (StatusCodes.Status400BadRequest, "A record with these values already exists.");
+        }
+
+        if (message.Contains("FOREIGN KEY constraint failed", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("foreign key", StringComparison.OrdinalIgnoreCase))
+        {
+            return (StatusCodes.Status400BadRequest, "Cannot save record due to related data constraints.");
+        }
+
+        if (message.Contains("NOT NULL constraint failed", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("null", StringComparison.OrdinalIgnoreCase))
+        {
+            return (StatusCodes.Status400BadRequest, "Required field is missing.");
+        }
+
+        return (StatusCodes.Status400BadRequest, message);
     }
 }
 

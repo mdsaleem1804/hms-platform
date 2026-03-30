@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using HMS.Domain.Entities;
 using HMS.Domain.Enums;
 
@@ -20,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<Billing> Billings { get; set; }
     public DbSet<BillingItem> BillingItems { get; set; }
     public DbSet<RevenueRate> RevenueRates { get; set; }
+    public DbSet<DoctorServiceRate> DoctorServiceRates { get; set; }
     public DbSet<HospitalSettings> HospitalSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -227,10 +229,13 @@ public class AppDbContext : DbContext
                 .HasColumnName("id")
                 .ValueGeneratedOnAdd();
 
-            entity.Property(a => a.DisplayId)
+            var displayIdProperty = entity.Property(a => a.DisplayId)
                 .HasColumnName("display_id")
                 .UseIdentityAlwaysColumn()
                 .ValueGeneratedOnAdd();
+            
+            // Prevent EF Core from trying to update IDENTITY ALWAYS column
+            displayIdProperty.Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
             entity.Property(a => a.AppointmentNo)
                 .HasColumnName("appointment_no")
@@ -701,6 +706,84 @@ public class AppDbContext : DbContext
             // Indexes for frequently queried columns
             entity.HasIndex(u => u.Role);
             entity.HasIndex(u => u.IsActive);
+        });
+
+        // DoctorServiceRate Configuration
+        modelBuilder.Entity<DoctorServiceRate>(entity =>
+        {
+            entity.ToTable("doctor_service_rates");
+            entity.HasKey(dsr => dsr.Id);
+
+            entity.Property(dsr => dsr.Id)
+                .HasColumnName("id")
+                .HasMaxLength(50)
+                .ValueGeneratedNever();
+
+            entity.Property(dsr => dsr.DoctorId)
+                .HasColumnName("doctor_id")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(dsr => dsr.ServiceName)
+                .HasColumnName("service_name")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(dsr => dsr.ServiceDescription)
+                .HasColumnName("service_description")
+                .HasMaxLength(500);
+
+            entity.Property(dsr => dsr.Rate)
+                .HasColumnName("rate")
+                .HasPrecision(10, 2)
+                .IsRequired();
+
+            entity.Property(dsr => dsr.IsActive)
+                .HasColumnName("is_active")
+                .HasDefaultValue(true);
+
+            entity.Property(dsr => dsr.EffectiveFrom)
+                .HasColumnName("effective_from")
+                .HasColumnType("timestamp without time zone")
+                .IsRequired();
+
+            entity.Property(dsr => dsr.EffectiveTo)
+                .HasColumnName("effective_to")
+                .HasColumnType("timestamp without time zone");
+
+            entity.Property(dsr => dsr.CreatedBy)
+                .HasColumnName("created_by")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(dsr => dsr.UpdatedBy)
+                .HasColumnName("updated_by")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(dsr => dsr.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(dsr => dsr.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(dsr => dsr.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
+            // Foreign key relationship with Doctor
+            entity.HasOne(dsr => dsr.Doctor)
+                .WithMany(d => d.ServiceRates)
+                .HasForeignKey(dsr => dsr.DoctorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes for better query performance
+            entity.HasIndex(dsr => dsr.DoctorId);
+            entity.HasIndex(dsr => dsr.ServiceName);
+            entity.HasIndex(dsr => new { dsr.DoctorId, dsr.ServiceName });
+            entity.HasIndex(dsr => dsr.IsActive);
         });
     }
 }

@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ChevronDown, ChevronRight, Printer, Save } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, Printer, Save, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PatientSearch } from '@/components/billing/PatientSearch';
-import { ServiceTable } from '@/components/billing/ServiceTable';
+import { ServiceTableWithRates, PricingSource } from '@/components/billing/ServiceTableWithRates';
 import { BillSummary } from '@/components/billing/BillSummary';
 import { PaymentSection } from '@/components/billing/PaymentSection';
 import {
@@ -115,6 +115,7 @@ export default function CreateOpdBillingPage() {
   const [loading, setLoading] = useState(false);
   const [isPatientAccordionOpen, setIsPatientAccordionOpen] = useState(true);
   const [isVisitAccordionOpen, setIsVisitAccordionOpen] = useState(true);
+  const [pricingSource, setPricingSource] = useState<PricingSource>('doctor');
 
   useEffect(() => {
     let active = true;
@@ -180,6 +181,14 @@ export default function CreateOpdBillingPage() {
       };
     });
   }, [billing.visitType, ratesByVisitType]);
+
+  // Reset rates hint when pricing source changes
+  // This encourages users to refetch rates from the new source
+  useEffect(() => {
+    // Clear available rates from the component to force re-fetching
+    // This will be handled through the component's state reset
+    // No action needed here - rates will be refetched when service names trigger the handler
+  }, [pricingSource, billing.doctorId]);
 
   useEffect(() => {
     const queryFromHook = searchParams.toString();
@@ -558,13 +567,23 @@ export default function CreateOpdBillingPage() {
               : 'Fast billing workflow for reception and front desk.'}
           </p>
         </div>
-        <Link
-          href="/billing/opd"
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          <ArrowLeft size={16} />
-          Back
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/settings?tab=service-rates"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            title="Manage doctor service rates"
+          >
+            <Settings size={16} />
+            Rates
+          </Link>
+          <Link
+            href="/billing/opd"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <ArrowLeft size={16} />
+            Back
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -721,7 +740,14 @@ export default function CreateOpdBillingPage() {
             )}
           </section>
 
-          <ServiceTable items={billing.items} onChange={(items) => patchBilling('items', items)} />
+          <ServiceTableWithRates 
+            items={billing.items} 
+            onChange={(items) => patchBilling('items', items)}
+            doctorId={billing.doctorId}
+            pricingSource={pricingSource}
+            onPricingSourceChange={setPricingSource}
+            standardRates={ratesByVisitType}
+          />
           {errors.items && <p className="-mt-4 text-xs text-red-600">{errors.items}</p>}
         </div>
 
@@ -788,6 +814,7 @@ export default function CreateOpdBillingPage() {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

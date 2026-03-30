@@ -39,8 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
 
   // Hydrate from localStorage only on client side
-  const [isHydrated, setIsHydrated] = useState(false);
-
   React.useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
@@ -56,7 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('authUser');
       }
     }
-    setIsHydrated(true);
   }, []);
 
   const login = (userData: UserDto, authToken: string) => {

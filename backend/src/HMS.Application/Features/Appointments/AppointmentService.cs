@@ -131,6 +131,7 @@ public class AppointmentService : IAppointmentService
 
         var (patient, doctor, department, appointmentDate, startTime, endTime) = await ValidateRequestAsync(request, id);
 
+        // Update scalar properties only
         existingAppointment.PatientId = patient.Id;
         existingAppointment.DoctorId = doctor.Id;
         existingAppointment.AppointmentDate = appointmentDate;
@@ -143,14 +144,32 @@ public class AppointmentService : IAppointmentService
         existingAppointment.Notes = request.Notes?.Trim() ?? string.Empty;
         existingAppointment.UpdatedAt = DateTime.UtcNow;
 
+        // Handle reminders: build the new list first
+        var newReminders = MapReminderEntities(request.Reminders);
+        
+        // Clear old reminders and add new ones
+        // The cascade delete configuration will handle database cleanup
         existingAppointment.Reminders.Clear();
-        foreach (var reminder in MapReminderEntities(request.Reminders))
+        foreach (var reminder in newReminders)
         {
             existingAppointment.Reminders.Add(reminder);
         }
 
-        var updatedAppointment = await _appointmentRepository.UpdateAsync(existingAppointment);
-        return MapToDto(updatedAppointment);
+        try
+        {
+            var updatedAppointment = await _appointmentRepository.UpdateAsync(existingAppointment);
+            return MapToDto(updatedAppointment);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"UpdateAppointmentAsync failed: {ex.GetType().Name}");
+            Console.WriteLine($"Message: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner: {ex.InnerException.Message}");
+            }
+            throw;
+        }
     }
 
     public async Task DeleteAppointmentAsync(string id)

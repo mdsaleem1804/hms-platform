@@ -12,4 +12,5 @@ public class Doctor : BaseEntity
     // Navigation property
     public virtual Department? Department { get; set; }
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+    public virtual ICollection<DoctorServiceRate> ServiceRates { get; set; } = new List<DoctorServiceRate>();
 }
