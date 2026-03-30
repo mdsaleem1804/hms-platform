@@ -9,7 +9,10 @@ using HMS.Application.Services;
 using HMS.Domain.Interfaces;
 using HMS.Infrastructure.Repositories;
 using HMS.Infrastructure.UhidGeneration;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.Text;
 
 namespace HMS.API.Extensions;
 
@@ -17,6 +20,12 @@ public static class ServiceExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // Authentication Services
+        services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<IUserRepository, UserRepository>();
+
         // Patient Services
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IPatientRepository, PatientRepository>();
@@ -42,6 +51,48 @@ public static class ServiceExtensions
         // Doctor Services
         services.AddScoped<IDoctorService, DoctorService>();
         services.AddScoped<IDoctorRepository, DoctorRepository>();
+
+        // JWT Configuration
+        var jwtSettings = configuration.GetSection("JwtSettings");
+        var secretKey = jwtSettings["SecretKey"];
+        var issuer = jwtSettings["Issuer"];
+        var audience = jwtSettings["Audience"];
+
+        if (string.IsNullOrEmpty(secretKey))
+            throw new InvalidOperationException("JWT SecretKey is not configured in appsettings.json");
+
+        var key = Encoding.UTF8.GetBytes(secretKey);
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = !string.IsNullOrEmpty(issuer),
+                ValidIssuer = issuer,
+                ValidateAudience = !string.IsNullOrEmpty(audience),
+                ValidAudience = audience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+            options.Events = new JwtBearerEvents
+            {
+                OnAuthenticationFailed = context =>
+                {
+                    if (context.Exception is SecurityTokenExpiredException)
+                    {
+                        context.Response.Headers.Add("Token-Expired", "true");
+                    }
+                    return Task.CompletedTask;
+                }
+            };
+        });
 
         // UHID Generator - Configuration-based selection
         var uhidOptions = new UhidGeneratorOptions();

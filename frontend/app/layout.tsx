@@ -1,12 +1,9 @@
-import type { Metadata } from 'next';
+'use client';
+
 import { ToasterProvider } from './ToasterProvider';
 import Header from '@/components/layout/Header';
+import { AuthProvider } from '@/context/AuthContext';
 import './globals.css';
-
-export const metadata: Metadata = {
-  title: 'HMS Platform',
-  description: 'Hospital Management System',
-};
 
 export default function RootLayout({
   children,
@@ -16,9 +13,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50">
-        <Header />
-        {children}
-        <ToasterProvider />
+        <AuthProvider>
+          <Header />
+          {children}
+          <ToasterProvider />
+        </AuthProvider>
       </body>
     </html>
   );

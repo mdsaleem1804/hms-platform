@@ -1,10 +1,19 @@
 'use client';
 
 import { Search, Bell, Settings, LogOut, User, Calendar, Calculator, MessageSquare, Clock } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { useRouter } from 'next/navigation';
+import { AuthContext } from '@/context/AuthContext';
 
 export default function Header() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const authContext = useContext(AuthContext);
+  const router = useRouter();
+
+  const handleLogout = () => {
+    authContext?.logout();
+    router.push('/login');
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm h-16 flex items-center px-4 md:px-6 sticky top-0 z-40">
@@ -121,7 +130,10 @@ export default function Header() {
                 <Settings className="h-4 w-4 inline mr-2" />
                 Settings
               </button>
-              <button className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 rounded-b-lg border-t border-gray-200">
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 rounded-b-lg border-t border-gray-200"
+              >
                 <LogOut className="h-4 w-4 inline mr-2" />
                 Logout
               </button>

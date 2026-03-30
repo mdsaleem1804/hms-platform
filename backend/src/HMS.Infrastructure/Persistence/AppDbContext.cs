@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using HMS.Domain.Entities;
+using HMS.Domain.Enums;
 
 namespace HMS.Infrastructure.Persistence;
 
@@ -7,6 +8,7 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+    public DbSet<User> Users { get; set; }
     public DbSet<Patient> Patients { get; set; }
     public DbSet<Department> Departments { get; set; }
     public DbSet<Doctor> Doctors { get; set; }
@@ -634,6 +636,71 @@ public class AppDbContext : DbContext
             entity.Property(h => h.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
             entity.Property(h => h.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");
             entity.Property(h => h.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
+        });
+
+        // User Configuration
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("users");
+            entity.HasKey(u => u.Id);
+
+            entity.Property(u => u.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(u => u.Name)
+                .HasColumnName("name")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(u => u.Email)
+                .HasColumnName("email")
+                .HasMaxLength(160)
+                .IsRequired();
+
+            entity.Property(u => u.PasswordHash)
+                .HasColumnName("password_hash")
+                .IsRequired();
+
+            entity.Property(u => u.PhoneNumber)
+                .HasColumnName("phone_number")
+                .HasMaxLength(30);
+
+            entity.Property(u => u.Role)
+                .HasColumnName("role")
+                .IsRequired();
+
+            entity.Property(u => u.IsActive)
+                .HasColumnName("is_active")
+                .HasDefaultValue(true)
+                .IsRequired();
+
+            entity.Property(u => u.DepartmentId)
+                .HasColumnName("department_id")
+                .HasMaxLength(50);
+
+            entity.Property(u => u.ReferenceId)
+                .HasColumnName("reference_id")
+                .HasMaxLength(50);
+
+            entity.Property(u => u.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(u => u.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(u => u.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
+            // Unique constraint on Email
+            entity.HasIndex(u => u.Email).IsUnique();
+
+            // Indexes for frequently queried columns
+            entity.HasIndex(u => u.Role);
+            entity.HasIndex(u => u.IsActive);
         });
     }
 }

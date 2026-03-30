@@ -56,7 +56,7 @@ export default function Sidebar() {
     },
     {
       name: 'Out Patient (OPD)',
-      path: '/opd',
+      path: '/billing/opd',
       icon: <ClipboardList className="h-5 w-5" />,
       category: 'Clinical',
     },
