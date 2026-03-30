@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState } from 'react';
 
 export interface UserDto {
   id: string;
@@ -37,10 +37,11 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserDto | null>(null);
   const [token, setToken] = useState<string | null>(null);
+
+  // Hydrate from localStorage only on client side
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Hydrate from localStorage
-  useEffect(() => {
+  React.useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
 
@@ -82,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user && !!token,
       }}
     >
-      {isHydrated && children}
+      {children}
     </AuthContext.Provider>
   );
 };

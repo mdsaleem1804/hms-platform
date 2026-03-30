@@ -259,8 +259,6 @@ const AppointmentDetailsSection = memo(({
           )}
           <Link
             href="/patients/register"
-            target="_blank"
-            rel="noopener noreferrer"
             className="mt-2 inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
           >
             <Plus className="h-4 w-4" />
