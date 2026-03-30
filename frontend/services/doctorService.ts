@@ -84,6 +84,24 @@ class DoctorService {
       throw error;
     }
   }
+
+  async searchDoctors(query: string, limit: number = 5): Promise<DoctorSummary[]> {
+    try {
+      if (!query.trim()) {
+        return [];
+      }
+      const response = await apiClient.get<any>('/api/doctors/search', {
+        params: {
+          query: query.trim(),
+          limit
+        }
+      });
+      return (response.data.data || []).slice(0, limit);
+    } catch (error) {
+      console.error('Failed to search doctors:', error);
+      return [];
+    }
+  }
 }
 
 export default new DoctorService();

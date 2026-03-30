@@ -34,6 +34,15 @@ public class DoctorService : IDoctorService
         return doctors.Select(MapToSummaryDto).ToList();
     }
 
+    public async Task<List<DoctorSummaryDto>> SearchAsync(string query, int limit)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return new List<DoctorSummaryDto>();
+
+        var doctors = await _doctorRepository.SearchAsync(query.Trim(), limit);
+        return doctors.Select(MapToSummaryDto).ToList();
+    }
+
     public async Task<DoctorDto> CreateAsync(CreateDoctorDto createDto, string createdBy)
     {
         // Validate required fields

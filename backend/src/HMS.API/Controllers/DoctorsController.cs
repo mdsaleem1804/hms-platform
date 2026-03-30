@@ -57,6 +57,31 @@ public class DoctorsController : ControllerBase
     }
 
     /// <summary>
+    /// Search doctors by name or specialization.
+    /// Returns lightweight summary records suitable for dropdowns and search inputs.
+    /// </summary>
+    /// <param name="query">Search term (min 1 character)</param>
+    /// <param name="limit">Max results to return (1–50, default 10)</param>
+    /// <returns>200 OK with list of matching doctor summaries</returns>
+    [HttpGet("search")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<DoctorSummaryDto>>>> SearchDoctors(
+        [FromQuery] string query,
+        [FromQuery] int limit = 10)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            throw new ArgumentException("Search query is required");
+        }
+
+        _logger.LogInformation("Searching doctors with query: {Query}, limit: {Limit}", query, limit);
+        var results = await _doctorService.SearchAsync(query, limit);
+        return Ok(ApiResponse<List<DoctorSummaryDto>>.SuccessResponse(results, $"{results.Count} doctor(s) found"));
+    }
+
+    /// <summary>
     /// Get doctor by ID
     /// </summary>
     /// <param name="id">Doctor ID</param>

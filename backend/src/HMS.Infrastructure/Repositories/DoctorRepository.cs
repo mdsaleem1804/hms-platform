@@ -39,6 +39,30 @@ public class DoctorRepository : IDoctorRepository
             .ToListAsync();
     }
 
+    public async Task<List<Doctor>> SearchAsync(string query, int limit)
+    {
+        var terms = query
+            .Trim()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(term => $"%{term}%")
+            .ToArray();
+
+        var searchable = _context.Doctors.AsNoTracking().AsQueryable();
+
+        foreach (var termPattern in terms)
+        {
+            searchable = searchable.Where(d =>
+                EF.Functions.ILike(d.Name, termPattern) ||
+                EF.Functions.ILike(d.Specialization, termPattern));
+        }
+
+        return await searchable
+            .Where(d => !d.IsDeleted)
+            .OrderBy(d => d.Name)
+            .Take(limit)
+            .ToListAsync();
+    }
+
     public async Task<Doctor> CreateAsync(Doctor doctor)
     {
         _context.Doctors.Add(doctor);
