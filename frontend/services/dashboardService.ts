@@ -62,29 +62,29 @@ class DashboardService {
   }
 
   async getRevenueRates(): Promise<RevenueRate[]> {
-    const response = await apiClient.get('/api/dashboard/revenue-rates');
+    const response = await apiClient.get('/api/hospital-rate-settings');
     return (response.data?.data ?? []) as RevenueRate[];
   }
 
   async updateRevenueRates(rates: RevenueRate[]): Promise<RevenueRate[]> {
-    const response = await apiClient.put('/api/dashboard/revenue-rates', {
+    const response = await apiClient.put('/api/hospital-rate-settings', {
       rates,
     });
     return (response.data?.data ?? []) as RevenueRate[];
   }
 
   async createRevenueRate(payload: RevenueRatePayload): Promise<RevenueRate> {
-    const response = await apiClient.post('/api/dashboard/revenue-rates', payload);
+    const response = await apiClient.post('/api/hospital-rate-settings', payload);
     return (response.data?.data ?? {}) as RevenueRate;
   }
 
   async updateRevenueRate(id: string, payload: RevenueRatePayload): Promise<RevenueRate> {
-    const response = await apiClient.put(`/api/dashboard/revenue-rates/${id}`, payload);
+    const response = await apiClient.put(`/api/hospital-rate-settings/${id}`, payload);
     return (response.data?.data ?? {}) as RevenueRate;
   }
 
   async deleteRevenueRate(id: string): Promise<void> {
-    await apiClient.delete(`/api/dashboard/revenue-rates/${id}`);
+    await apiClient.delete(`/api/hospital-rate-settings/${id}`);
   }
 
   async getHospitalSettings(): Promise<HospitalSettings> {
