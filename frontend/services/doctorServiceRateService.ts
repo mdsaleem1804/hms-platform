@@ -62,10 +62,14 @@ const doctorServiceRateService = {
    */
   async getRatesByDoctor(doctorId: string): Promise<DoctorServiceRateSummaryDto[]> {
     try {
+      console.log('[DoctorServiceRateService] Fetching rates for doctor:', doctorId);
       const response = await apiClient.get(`/api/DoctorServiceRates/doctor/${doctorId}`);
-      return response.data?.data || [];
+      console.log('[DoctorServiceRateService] Response:', response.data);
+      const data = response.data?.data || [];
+      console.log('[DoctorServiceRateService] Extracted data:', data);
+      return data;
     } catch (error) {
-      console.error(`Error fetching service rates for doctor ${doctorId}:`, error);
+      console.error(`[DoctorServiceRateService] Error fetching service rates for doctor ${doctorId}:`, error);
       return [];
     }
   },

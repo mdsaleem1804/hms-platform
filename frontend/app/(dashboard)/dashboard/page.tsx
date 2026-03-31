@@ -138,7 +138,7 @@ function RevenueRatesEditor({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Revenue Rate Settings</h2>
-          <p className="mt-1 text-xs text-gray-500">Admin configurable rates used for Revenue Today calculation.</p>
+          <p className="mt-1 text-xs text-gray-500">Admin configurable rates used for OPD standard pricing.</p>
         </div>
         <button
           type="button"
@@ -294,7 +294,7 @@ export default function Dashboard() {
         <SummaryCard
           title="Revenue Today"
           value={loading ? '...' : formatCurrency(summary?.revenueToday ?? 0)}
-          hint="Estimated from today's appointment visit types"
+          hint="Collected from today's OPD bills"
           icon={<IndianRupee size={18} />}
         />
       </div>

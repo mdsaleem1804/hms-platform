@@ -28,6 +28,17 @@ public class DashboardMetricsRepository : IDashboardMetricsRepository
             .CountAsync(appointment => appointment.AppointmentDate.Date == date.Date);
     }
 
+    public async Task<decimal> GetBillingRevenueOnDateAsync(DateTime date)
+    {
+        var total = await _dbContext.Billings
+            .AsNoTracking()
+            .Where(billing => !billing.IsDeleted && billing.Date.Date == date.Date)
+            .Select(billing => (decimal?)billing.NetAmount)
+            .SumAsync();
+
+        return total ?? 0m;
+    }
+
     public async Task<Dictionary<string, int>> GetAppointmentStatusBreakdownAsync(DateTime date)
     {
         var grouped = await _dbContext.Appointments

@@ -60,7 +60,7 @@ const VISIT_TYPE_OPTIONS: Array<{ value: VisitType; label: string }> = [
   { value: 'procedure', label: 'Procedure' },
 ];
 
-const defaultServiceItem = (service = 'Consultation Fee', rate = 0): BillingServiceItem => ({
+const defaultServiceItem = (service = '', rate = 0): BillingServiceItem => ({
   id: `srv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   service,
   qty: 1,
@@ -101,7 +101,7 @@ export default function CreateOpdBillingPage() {
     doctorId: '',
     date: TODAY,
     appointmentId: '',
-    items: [defaultServiceItem('Consultation Fee', 0)],
+    items: [defaultServiceItem()],
     discountType: 'amount',
     discountValue: 0,
     tax: 0,
@@ -154,33 +154,6 @@ export default function CreateOpdBillingPage() {
       active = false;
     };
   }, []);
-
-  useEffect(() => {
-    // Keep a default consultation-fee row aligned with selected visit type rate.
-    const rate = ratesByVisitType[billing.visitType] ?? 0;
-    setBilling((prev) => {
-      if (!prev.items.length) {
-        return { ...prev, items: [defaultServiceItem('Consultation Fee', rate)] };
-      }
-
-      const [first, ...rest] = prev.items;
-      if (!first.service.trim().toLowerCase().includes('consultation fee')) {
-        return prev;
-      }
-
-      const updatedFirst: BillingServiceItem = {
-        ...first,
-        qty: first.qty || 1,
-        rate,
-        amount: (first.qty || 1) * rate,
-      };
-
-      return {
-        ...prev,
-        items: [updatedFirst, ...rest],
-      };
-    });
-  }, [billing.visitType, ratesByVisitType]);
 
   // Reset rates hint when pricing source changes
   // This encourages users to refetch rates from the new source
@@ -244,7 +217,7 @@ export default function CreateOpdBillingPage() {
                 rate: Math.max(0, Number(item.rate) || 0),
                 amount: Math.max(1, Number(item.qty) || 1) * Math.max(0, Number(item.rate) || 0),
               }))
-            : [defaultServiceItem('Consultation Fee', 0)],
+            : [defaultServiceItem()],
           discountType: bill.subtotal > 0 && bill.discount > 0 ? 'amount' : prev.discountType,
           discountValue: Math.max(0, Number(bill.discount) || 0),
           tax: Math.max(0, Number(bill.tax) || 0),
@@ -596,9 +569,9 @@ export default function CreateOpdBillingPage() {
               aria-expanded={isPatientAccordionOpen}
             >
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">Patient Selection</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Patient Selection</h2>
                 {isAppointmentLocked && (
-                  <p className="mt-1 text-xs text-gray-600">{patientSummaryText}</p>
+                  <p className="mt-1 text-sm text-gray-600">{patientSummaryText}</p>
                 )}
               </div>
               {isPatientAccordionOpen ? (
@@ -637,9 +610,9 @@ export default function CreateOpdBillingPage() {
               aria-expanded={isVisitAccordionOpen}
             >
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">Visit Details</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Visit Details</h2>
                 {isAppointmentLocked && (
-                  <p className="mt-1 text-xs text-gray-600">
+                  <p className="mt-1 text-sm text-gray-600">
                     {billing.visitType} • {selectedDepartmentName} • {selectedDoctorName} • {billing.date}
                   </p>
                 )}
@@ -655,12 +628,12 @@ export default function CreateOpdBillingPage() {
               <div className="border-t border-gray-100 px-5 pb-5 pt-4">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Visit Type</label>
+                <label className="mb-1 block text-sm font-semibold uppercase tracking-wide text-gray-500">Visit Type</label>
                 <select
                   value={billing.visitType}
                   onChange={(e) => patchBilling('visitType', e.target.value as VisitType)}
                   disabled={isAppointmentLocked}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {VISIT_TYPE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
@@ -669,7 +642,7 @@ export default function CreateOpdBillingPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Department</label>
+                <label className="mb-1 block text-sm font-semibold uppercase tracking-wide text-gray-500">Department</label>
                 <select
                   value={billing.departmentId}
                   onChange={(e) => {
@@ -677,7 +650,7 @@ export default function CreateOpdBillingPage() {
                     patchBilling('doctorId', '');
                   }}
                   disabled={isAppointmentLocked}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.departmentId ? 'border-red-500' : 'border-gray-300'}`}
+                  className={`w-full rounded-lg border px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.departmentId ? 'border-red-500' : 'border-gray-300'}`}
                 >
                   <option value="">Select department</option>
                   {departments.map((department) => (
@@ -688,12 +661,12 @@ export default function CreateOpdBillingPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Doctor</label>
+                <label className="mb-1 block text-sm font-semibold uppercase tracking-wide text-gray-500">Doctor</label>
                 <select
                   value={billing.doctorId}
                   onChange={(e) => patchBilling('doctorId', e.target.value)}
                   disabled={isAppointmentLocked}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.doctorId ? 'border-red-500' : 'border-gray-300'}`}
+                  className={`w-full rounded-lg border px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.doctorId ? 'border-red-500' : 'border-gray-300'}`}
                 >
                   <option value="">Select doctor</option>
                   {availableDoctors.map((doctor) => (
@@ -706,26 +679,26 @@ export default function CreateOpdBillingPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Date</label>
+                <label className="mb-1 block text-sm font-semibold uppercase tracking-wide text-gray-500">Date</label>
                 <input
                   type="date"
                   value={billing.date}
                   onChange={(e) => patchBilling('date', e.target.value)}
                   disabled={isAppointmentLocked}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.date ? 'border-red-500' : 'border-gray-300'}`}
+                  className={`w-full rounded-lg border px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.date ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
               </div>
 
               <div className="md:col-span-2">
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <label className="mb-1 block text-sm font-semibold uppercase tracking-wide text-gray-500">
                   Linked Appointment (Optional)
                 </label>
                 <select
                   value={billing.appointmentId}
                   onChange={(e) => patchBilling('appointmentId', e.target.value)}
                   disabled={!patient?.id || isAppointmentLocked}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">No linked appointment</option>
                   {patientAppointments.map((appointment) => (

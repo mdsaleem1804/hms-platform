@@ -28,13 +28,11 @@ public class DashboardService : IDashboardService
         // EF Core DbContext is not thread-safe; run queries sequentially
         var todaysPatients = await _dashboardMetricsRepository.GetPatientsCreatedOnDateAsync(today);
         var todaysAppointments = await _dashboardMetricsRepository.GetAppointmentsOnDateAsync(today);
+        var revenueToday = await _dashboardMetricsRepository.GetBillingRevenueOnDateAsync(today);
         var statusBreakdownRaw = await _dashboardMetricsRepository.GetAppointmentStatusBreakdownAsync(today);
         var visitTypeCounts = await _dashboardMetricsRepository.GetAppointmentVisitTypeCountsAsync(today);
         var patientCounts = await _dashboardMetricsRepository.GetDailyPatientCountsAsync(startDate, today);
         var appointmentCounts = await _dashboardMetricsRepository.GetDailyAppointmentCountsAsync(startDate, today);
-
-        var visitTypeRates = await GetVisitTypeRatesAsync();
-        var revenueToday = CalculateRevenue(visitTypeCounts, visitTypeRates);
 
         var statusBreakdown = statusBreakdownRaw
             .OrderByDescending(item => item.Value)
