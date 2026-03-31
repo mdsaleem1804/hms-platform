@@ -602,6 +602,10 @@ public class AppDbContext : DbContext
             entity.HasKey(r => r.Id);
             entity.Property(r => r.Id).HasColumnName("id").HasMaxLength(50);
             entity.Property(r => r.VisitType).HasColumnName("visit_type").HasMaxLength(50).IsRequired();
+            entity.Property(r => r.Module).HasColumnName("module").HasMaxLength(10).HasDefaultValue("OPD").IsRequired();
+            entity.Property(r => r.ServiceCode).HasColumnName("service_code").HasMaxLength(255).HasDefaultValue("").IsRequired();
+            entity.Property(r => r.DisplayName).HasColumnName("display_name").HasMaxLength(500).HasDefaultValue("").IsRequired();
+            entity.Property(r => r.IsActive).HasColumnName("is_active").HasDefaultValue(true).IsRequired();
             entity.Property(r => r.Rate).HasColumnName("rate").HasColumnType("numeric(12,2)").IsRequired();
             entity.Property(r => r.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
             entity.Property(r => r.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("NOW()");

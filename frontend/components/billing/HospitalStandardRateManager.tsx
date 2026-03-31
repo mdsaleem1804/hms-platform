@@ -2,21 +2,31 @@
 
 import { useEffect, useState } from 'react';
 import { Loader2, Plus } from 'lucide-react';
-import dashboardService, { RevenueRate } from '@/services/dashboardService';
+import dashboardService, { RateModule, RevenueRate } from '@/services/dashboardService';
 import { notify } from '@/lib/toast';
 
+const MODULES: RateModule[] = ['OPD', 'IPD', 'ECG', 'XRAY', 'LAB'];
+
+const MODULE_CONFIG: Record<RateModule, { displayLabel: string; nameHint: string }> = {
+  OPD: { displayLabel: 'Service Name', nameHint: 'e.g. Consultation, Follow Up, Procedure' },
+  IPD: { displayLabel: 'Charge Name', nameHint: 'e.g. General Ward Admission' },
+  ECG: { displayLabel: 'Test Name', nameHint: 'e.g. Resting ECG' },
+  XRAY: { displayLabel: 'Procedure Name', nameHint: 'e.g. Chest X-Ray' },
+  LAB: { displayLabel: 'Test Name', nameHint: 'e.g. Complete Blood Count' },
+};
+
 const defaultForm = {
+  module: 'OPD' as RateModule,
+  serviceCode: '',
+  displayName: '',
+  isActive: true,
   visitType: '',
   rate: 0,
 };
 
-const toLabel = (value: string) =>
-  value
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-
 export function HospitalStandardRateManager() {
   const [rates, setRates] = useState<RevenueRate[]>([]);
+  const [activeModule, setActiveModule] = useState<RateModule>('OPD');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -28,7 +38,7 @@ export function HospitalStandardRateManager() {
     const loadRates = async () => {
       try {
         setIsLoading(true);
-        const data = await dashboardService.getRevenueRates();
+        const data = await dashboardService.getRevenueRates(activeModule);
         if (!active) {
           return;
         }
@@ -54,19 +64,20 @@ export function HospitalStandardRateManager() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [activeModule]);
 
   const handleReset = () => {
-    setFormData(defaultForm);
+    setFormData({ ...defaultForm, module: activeModule });
     setEditingId(null);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const visitType = formData.visitType.trim();
-    if (!visitType) {
-      notify.warning('Service name is required', { id: 'settings:hospital-rates:name:required' });
+    const displayName = formData.displayName.trim();
+
+    if (!displayName) {
+      notify.warning('Service name is required', { id: 'settings:hospital-rates:display:required' });
       return;
     }
 
@@ -75,28 +86,41 @@ export function HospitalStandardRateManager() {
       return;
     }
 
+    // On create: derive a stable key from the display name. On edit: preserve the existing key.
+    const serviceCode = editingId
+      ? formData.serviceCode
+      : displayName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
+
     try {
       setIsSaving(true);
 
       if (editingId) {
         const updated = await dashboardService.updateRevenueRate(editingId, {
-          visitType,
+          module: formData.module,
+          serviceCode,
+          displayName,
+          isActive: formData.isActive,
+          visitType: serviceCode,
           rate: formData.rate,
         });
 
         setRates((current) =>
           current
             .map((rate) => (rate.id === editingId ? updated : rate))
-            .sort((left, right) => left.visitType.localeCompare(right.visitType))
+            .sort((left, right) => left.displayName.localeCompare(right.displayName))
         );
         notify.success('Hospital standard rate updated', { id: 'settings:hospital-rates:update:success' });
       } else {
         const created = await dashboardService.createRevenueRate({
-          visitType,
+          module: formData.module,
+          serviceCode,
+          displayName,
+          isActive: formData.isActive,
+          visitType: serviceCode,
           rate: formData.rate,
         });
 
-        setRates((current) => [...current, created].sort((left, right) => left.visitType.localeCompare(right.visitType)));
+        setRates((current) => [...current, created].sort((left, right) => left.displayName.localeCompare(right.displayName)));
         notify.success('Hospital standard rate created', { id: 'settings:hospital-rates:create:success' });
       }
 
@@ -113,9 +137,14 @@ export function HospitalStandardRateManager() {
   const handleEdit = (rate: RevenueRate) => {
     setEditingId(rate.id);
     setFormData({
-      visitType: rate.visitType,
+      module: rate.module,
+      serviceCode: rate.serviceCode,
+      displayName: rate.displayName,
+      isActive: rate.isActive,
+      visitType: rate.serviceCode,
       rate: rate.rate,
     });
+    setActiveModule(rate.module);
   };
 
   const handleDelete = async (rateId: string) => {
@@ -144,24 +173,47 @@ export function HospitalStandardRateManager() {
       <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
         <h2 className="text-lg font-semibold text-gray-900">Hospital Standard Rates</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Manage the default OPD service list and pricing used when hospital standard rates are selected.
+          Manage default service catalogs and pricing across OPD, IPD, ECG, X-ray, and Lab.
         </p>
+      </div>
+
+      <div className="border-b border-gray-200 bg-white px-6 py-3">
+        <div className="flex flex-wrap gap-2">
+          {MODULES.map((module) => (
+            <button
+              key={module}
+              type="button"
+              onClick={() => {
+                setActiveModule(module);
+                setEditingId(null);
+                setFormData((current) => ({ ...defaultForm, module, isActive: current.isActive }));
+              }}
+              className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                activeModule === module
+                  ? 'border-blue-600 bg-blue-600 text-white'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:text-blue-700'
+              }`}
+            >
+              {module}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-6 p-6 xl:grid-cols-[360px,1fr]">
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
           <h3 className="mb-4 text-sm font-semibold text-gray-900">
-            {editingId ? 'Edit Standard Rate' : 'Add Standard Rate'}
+            {editingId ? `Edit ${activeModule} Rate` : `Add ${activeModule} Rate`}
           </h3>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <label className="block">
-              <span className="mb-1 block text-sm font-medium text-gray-700">Service Name *</span>
+              <span className="mb-1 block text-sm font-medium text-gray-700">{MODULE_CONFIG[activeModule].displayLabel} *</span>
               <input
                 type="text"
-                value={formData.visitType}
-                onChange={(event) => setFormData((current) => ({ ...current, visitType: event.target.value }))}
-                placeholder="e.g., consultation, dressing, injection"
+                value={formData.displayName}
+                onChange={(event) => setFormData((current) => ({ ...current, module: activeModule, displayName: event.target.value }))}
+                placeholder={MODULE_CONFIG[activeModule].nameHint}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </label>
@@ -176,6 +228,16 @@ export function HospitalStandardRateManager() {
                 onChange={(event) => setFormData((current) => ({ ...current, rate: Number(event.target.value) || 0 }))}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={formData.isActive}
+                onChange={(event) => setFormData((current) => ({ ...current, module: activeModule, isActive: event.target.checked }))}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              Active (available for billing selection)
             </label>
 
             <div className="flex gap-2">
@@ -202,7 +264,7 @@ export function HospitalStandardRateManager() {
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-gray-900">Configured Standard Rates</h3>
+          <h3 className="mb-3 text-sm font-semibold text-gray-900">Configured {activeModule} Rates</h3>
 
           {isLoading ? (
             <div className="flex items-center justify-center rounded-lg border border-gray-200 bg-white py-12">
@@ -216,11 +278,13 @@ export function HospitalStandardRateManager() {
                   className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 hover:bg-gray-50"
                 >
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{toLabel(rate.visitType)}</p>
-                    <p className="text-xs text-gray-500">Stored key: {rate.visitType}</p>
+                    <p className="text-sm font-medium text-gray-900">{rate.displayName}</p>
                   </div>
 
                   <div className="flex items-center gap-4">
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${rate.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                      {rate.isActive ? 'Active' : 'Inactive'}
+                    </span>
                     <span className="text-sm font-semibold text-emerald-700">₹{rate.rate.toFixed(2)}</span>
                     <button
                       type="button"
@@ -242,7 +306,7 @@ export function HospitalStandardRateManager() {
             </div>
           ) : (
             <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-              No hospital standard rates configured yet.
+              No {activeModule} rates configured yet.
             </div>
           )}
         </div>

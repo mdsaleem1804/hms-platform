@@ -127,7 +127,7 @@ export default function CreateOpdBillingPage() {
           departmentService.getAll(),
           doctorService.getAll(),
           appointmentService.getAll(),
-          dashboardService.getRevenueRates(),
+          dashboardService.getRevenueRates('OPD', true),
         ]);
 
         if (!active) return;
@@ -138,7 +138,9 @@ export default function CreateOpdBillingPage() {
 
         const map: Record<string, number> = {};
         for (const rate of revenueRates) {
-          map[rate.visitType.toLowerCase()] = Number(rate.rate) || 0;
+          const key = (rate.serviceCode || rate.visitType || '').toLowerCase();
+          if (!key) continue;
+          map[key] = Number(rate.rate) || 0;
         }
         setRatesByVisitType(map);
       } catch (error) {

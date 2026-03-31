@@ -25,11 +25,21 @@ export interface DashboardMetrics {
 
 export interface RevenueRate {
   id: string;
+  module: RateModule;
+  serviceCode: string;
+  displayName: string;
+  isActive: boolean;
   visitType: string;
   rate: number;
 }
 
+export type RateModule = 'OPD' | 'IPD' | 'ECG' | 'XRAY' | 'LAB';
+
 export interface RevenueRatePayload {
+  module: RateModule;
+  serviceCode: string;
+  displayName: string;
+  isActive: boolean;
   visitType: string;
   rate: number;
 }
@@ -61,8 +71,10 @@ class DashboardService {
     return response.data?.data as DashboardMetrics;
   }
 
-  async getRevenueRates(): Promise<RevenueRate[]> {
-    const response = await apiClient.get('/api/hospital-rate-settings');
+  async getRevenueRates(module?: RateModule, onlyActive = false): Promise<RevenueRate[]> {
+    const response = await apiClient.get('/api/hospital-rate-settings', {
+      params: { module, onlyActive },
+    });
     return (response.data?.data ?? []) as RevenueRate[];
   }
 

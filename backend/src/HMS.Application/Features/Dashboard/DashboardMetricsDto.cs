@@ -30,20 +30,50 @@ public class DashboardMetricsDto
 public class RevenueRateDto
 {
     public string Id { get; set; } = string.Empty;
+    public string Module { get; set; } = "OPD";
+    public string ServiceCode { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
     public string VisitType { get; set; } = string.Empty;
     public decimal Rate { get; set; }
 }
 
 public class CreateRevenueRateRequestDto
 {
+    public string Module { get; set; } = "OPD";
+    public string ServiceCode { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
     public string VisitType { get; set; } = string.Empty;
     public decimal Rate { get; set; }
 }
 
 public class UpdateRevenueRateRequestDto
 {
+    public string Module { get; set; } = "OPD";
+    public string ServiceCode { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
     public string VisitType { get; set; } = string.Empty;
     public decimal Rate { get; set; }
+}
+
+public static class RevenueRateModules
+{
+    public const string Opd = "OPD";
+    public const string Ipd = "IPD";
+    public const string Ecg = "ECG";
+    public const string Xray = "XRAY";
+    public const string Lab = "LAB";
+
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase)
+    {
+        Opd,
+        Ipd,
+        Ecg,
+        Xray,
+        Lab,
+    };
 }
 
 public class UpdateRevenueRatesRequestDto

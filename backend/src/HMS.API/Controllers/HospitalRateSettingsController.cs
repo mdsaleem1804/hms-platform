@@ -19,10 +19,10 @@ public class HospitalRateSettingsController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ApiResponse<List<RevenueRateDto>>>> GetRevenueRates()
+    public async Task<ActionResult<ApiResponse<List<RevenueRateDto>>>> GetRevenueRates([FromQuery] string? module = null, [FromQuery] bool onlyActive = false)
     {
-        _logger.LogInformation("Fetching hospital standard rates");
-        var rates = await _dashboardService.GetRevenueRatesAsync();
+        _logger.LogInformation("Fetching hospital standard rates for module {Module} (onlyActive={OnlyActive})", module ?? "ALL", onlyActive);
+        var rates = await _dashboardService.GetRevenueRatesAsync(module, onlyActive);
         return Ok(ApiResponse<List<RevenueRateDto>>.SuccessResponse(rates, "Revenue rates retrieved successfully"));
     }
 

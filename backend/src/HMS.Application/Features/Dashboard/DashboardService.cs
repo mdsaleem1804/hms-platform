@@ -64,20 +64,25 @@ public class DashboardService : IDashboardService
         };
     }
 
-    public async Task<List<RevenueRateDto>> GetRevenueRatesAsync()
+    public async Task<List<RevenueRateDto>> GetRevenueRatesAsync(string? module = null, bool onlyActive = false)
     {
-        var rates = await _revenueRateRepository.GetAllAsync();
+        var normalizedModule = NormalizeModuleOrNull(module);
+        var rates = await _revenueRateRepository.GetAllAsync(normalizedModule, onlyActive);
 
-        if (!rates.Any())
+        if (!rates.Any() && string.IsNullOrEmpty(normalizedModule))
         {
             var defaults = GetDefaultVisitTypeRates();
             await _revenueRateRepository.UpsertManyAsync(defaults.Select(item => new RevenueRate
             {
+                Module = RevenueRateModules.Opd,
+                ServiceCode = item.Key,
+                DisplayName = ToTitleCase(item.Key),
+                IsActive = true,
                 VisitType = item.Key,
                 Rate = item.Value,
             }));
 
-            rates = await _revenueRateRepository.GetAllAsync();
+            rates = await _revenueRateRepository.GetAllAsync(normalizedModule, onlyActive);
         }
 
         return rates
@@ -99,17 +104,23 @@ public class DashboardService : IDashboardService
 
     public async Task<RevenueRateDto> CreateRevenueRateAsync(CreateRevenueRateRequestDto request)
     {
-        var normalizedVisitType = NormalizeVisitType(request.VisitType);
-        ValidateRevenueRate(normalizedVisitType, request.Rate);
+        var normalizedModule = NormalizeModuleOrThrow(request.Module);
+        var normalizedServiceCode = NormalizeServiceCode(request.ServiceCode, request.VisitType);
+        var displayName = NormalizeDisplayName(request.DisplayName, normalizedServiceCode);
+        ValidateRevenueRate(normalizedModule, normalizedServiceCode, request.Rate);
 
-        if (await _revenueRateRepository.ExistsByVisitTypeAsync(normalizedVisitType))
+        if (await _revenueRateRepository.ExistsByModuleAndServiceCodeAsync(normalizedModule, normalizedServiceCode))
         {
-            throw new ArgumentException("A hospital standard rate with this service name already exists");
+            throw new ArgumentException("A hospital standard rate with this module and service code already exists");
         }
 
         var created = await _revenueRateRepository.CreateAsync(new RevenueRate
         {
-            VisitType = normalizedVisitType,
+            Module = normalizedModule,
+            ServiceCode = normalizedServiceCode,
+            DisplayName = displayName,
+            IsActive = request.IsActive,
+            VisitType = normalizedServiceCode,
             Rate = request.Rate,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
@@ -126,15 +137,21 @@ public class DashboardService : IDashboardService
             throw new KeyNotFoundException("Revenue rate not found");
         }
 
-        var normalizedVisitType = NormalizeVisitType(request.VisitType);
-        ValidateRevenueRate(normalizedVisitType, request.Rate);
+        var normalizedModule = NormalizeModuleOrThrow(request.Module);
+        var normalizedServiceCode = NormalizeServiceCode(request.ServiceCode, request.VisitType);
+        var displayName = NormalizeDisplayName(request.DisplayName, normalizedServiceCode);
+        ValidateRevenueRate(normalizedModule, normalizedServiceCode, request.Rate);
 
-        if (await _revenueRateRepository.ExistsByVisitTypeAsync(normalizedVisitType, id))
+        if (await _revenueRateRepository.ExistsByModuleAndServiceCodeAsync(normalizedModule, normalizedServiceCode, id))
         {
-            throw new ArgumentException("A hospital standard rate with this service name already exists");
+            throw new ArgumentException("A hospital standard rate with this module and service code already exists");
         }
 
-        existing.VisitType = normalizedVisitType;
+        existing.Module = normalizedModule;
+        existing.ServiceCode = normalizedServiceCode;
+        existing.DisplayName = displayName;
+        existing.IsActive = request.IsActive;
+        existing.VisitType = normalizedServiceCode;
         existing.Rate = request.Rate;
 
         var updated = await _revenueRateRepository.UpdateAsync(existing);
@@ -163,12 +180,18 @@ public class DashboardService : IDashboardService
             .Where(rate => !string.IsNullOrWhiteSpace(rate.VisitType))
             .Select(rate =>
             {
-                var visitType = NormalizeVisitType(rate.VisitType);
-                ValidateRevenueRate(visitType, rate.Rate);
+                var module = NormalizeModuleOrThrow(rate.Module);
+                var serviceCode = NormalizeServiceCode(rate.ServiceCode, rate.VisitType);
+                var displayName = NormalizeDisplayName(rate.DisplayName, serviceCode);
+                ValidateRevenueRate(module, serviceCode, rate.Rate);
 
                 return new RevenueRate
                 {
-                    VisitType = visitType,
+                    Module = module,
+                    ServiceCode = serviceCode,
+                    DisplayName = displayName,
+                    IsActive = rate.IsActive,
+                    VisitType = serviceCode,
                     Rate = rate.Rate,
                 };
             })
@@ -237,16 +260,58 @@ public class DashboardService : IDashboardService
         };
     }
 
-    private static string NormalizeVisitType(string visitType)
+    private static string NormalizeServiceCode(string serviceCode, string? visitType)
     {
-        return visitType.Trim().ToLowerInvariant();
+        var fromServiceCode = serviceCode?.Trim() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(fromServiceCode))
+        {
+            return fromServiceCode.ToLowerInvariant();
+        }
+
+        return (visitType ?? string.Empty).Trim().ToLowerInvariant();
     }
 
-    private static void ValidateRevenueRate(string visitType, decimal rate)
+    private static string NormalizeDisplayName(string displayName, string serviceCode)
     {
-        if (string.IsNullOrWhiteSpace(visitType))
+        if (!string.IsNullOrWhiteSpace(displayName))
         {
-            throw new ArgumentException("Service name is required");
+            return displayName.Trim();
+        }
+
+        return ToTitleCase(serviceCode);
+    }
+
+    private static string NormalizeModuleOrThrow(string module)
+    {
+        var normalized = module.Trim().ToUpperInvariant();
+        if (!RevenueRateModules.All.Contains(normalized))
+        {
+            throw new ArgumentException($"Unsupported module '{module}'. Allowed values: OPD, IPD, ECG, XRAY, LAB");
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeModuleOrNull(string? module)
+    {
+        if (string.IsNullOrWhiteSpace(module))
+        {
+            return null;
+        }
+
+        return NormalizeModuleOrThrow(module);
+    }
+
+    private static void ValidateRevenueRate(string module, string serviceCode, decimal rate)
+    {
+        if (string.IsNullOrWhiteSpace(serviceCode))
+        {
+            throw new ArgumentException("Service code is required");
+        }
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(serviceCode, "^[a-z0-9][a-z0-9_-]*$"))
+        {
+            throw new ArgumentException("Service code must be lowercase and can only contain letters, numbers, '_' or '-'");
         }
 
         if (rate < 0)
@@ -255,12 +320,32 @@ public class DashboardService : IDashboardService
         }
     }
 
+    private static string ToTitleCase(string serviceCode)
+    {
+        return string.Join(' ', serviceCode
+            .Replace('-', ' ')
+            .Replace('_', ' ')
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
+    }
+
     private static RevenueRateDto MapRevenueRate(RevenueRate rate)
     {
+        var normalizedModule = string.IsNullOrWhiteSpace(rate.Module)
+            ? RevenueRateModules.Opd
+            : rate.Module.Trim().ToUpperInvariant();
+        var serviceCode = string.IsNullOrWhiteSpace(rate.ServiceCode)
+            ? rate.VisitType
+            : rate.ServiceCode;
+
         return new RevenueRateDto
         {
             Id = rate.Id,
-            VisitType = rate.VisitType,
+            Module = normalizedModule,
+            ServiceCode = serviceCode,
+            DisplayName = string.IsNullOrWhiteSpace(rate.DisplayName) ? ToTitleCase(serviceCode) : rate.DisplayName,
+            IsActive = rate.IsActive,
+            VisitType = serviceCode,
             Rate = rate.Rate,
         };
     }

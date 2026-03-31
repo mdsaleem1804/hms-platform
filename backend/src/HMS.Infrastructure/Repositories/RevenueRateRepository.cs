@@ -1,4 +1,5 @@
 using HMS.Application.Repositories;
+using HMS.Application.Features.Dashboard;
 using HMS.Domain.Entities;
 using HMS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +15,23 @@ public class RevenueRateRepository : IRevenueRateRepository
         _context = context;
     }
 
-    public async Task<List<RevenueRate>> GetAllAsync()
+    public async Task<List<RevenueRate>> GetAllAsync(string? module = null, bool onlyActive = false)
     {
-        return await _context.RevenueRates
-            .Where(r => !r.IsDeleted)
+        var query = _context.RevenueRates
+            .Where(r => !r.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(module))
+        {
+            var normalizedModule = module.Trim().ToUpperInvariant();
+            query = query.Where(r => r.Module == normalizedModule);
+        }
+
+        if (onlyActive)
+        {
+            query = query.Where(r => r.IsActive);
+        }
+
+        return await query
             .OrderBy(r => r.VisitType)
             .ToListAsync();
     }
@@ -35,13 +49,15 @@ public class RevenueRateRepository : IRevenueRateRepository
             .FirstOrDefaultAsync(r => r.VisitType == normalized && !r.IsDeleted);
     }
 
-    public async Task<bool> ExistsByVisitTypeAsync(string visitType, string? excludeId = null)
+    public async Task<bool> ExistsByModuleAndServiceCodeAsync(string module, string serviceCode, string? excludeId = null)
     {
-        var normalized = visitType.Trim().ToLowerInvariant();
+        var normalizedModule = module.Trim().ToUpperInvariant();
+        var normalizedServiceCode = serviceCode.Trim().ToLowerInvariant();
 
         return await _context.RevenueRates.AnyAsync(r =>
             !r.IsDeleted &&
-            r.VisitType == normalized &&
+            r.Module == normalizedModule &&
+            r.ServiceCode == normalizedServiceCode &&
             (excludeId == null || r.Id != excludeId));
     }
 
@@ -84,6 +100,16 @@ public class RevenueRateRepository : IRevenueRateRepository
 
             if (existing is null)
             {
+                incoming.Module = string.IsNullOrWhiteSpace(incoming.Module)
+                    ? RevenueRateModules.Opd
+                    : incoming.Module.Trim().ToUpperInvariant();
+                incoming.ServiceCode = string.IsNullOrWhiteSpace(incoming.ServiceCode)
+                    ? normalized
+                    : incoming.ServiceCode.Trim().ToLowerInvariant();
+                incoming.DisplayName = string.IsNullOrWhiteSpace(incoming.DisplayName)
+                    ? incoming.ServiceCode
+                    : incoming.DisplayName.Trim();
+                incoming.IsActive = true;
                 incoming.VisitType = normalized;
                 incoming.CreatedAt = DateTime.UtcNow;
                 incoming.UpdatedAt = DateTime.UtcNow;
@@ -91,6 +117,16 @@ public class RevenueRateRepository : IRevenueRateRepository
             }
             else
             {
+                existing.Module = string.IsNullOrWhiteSpace(existing.Module)
+                    ? RevenueRateModules.Opd
+                    : existing.Module.Trim().ToUpperInvariant();
+                existing.ServiceCode = string.IsNullOrWhiteSpace(existing.ServiceCode)
+                    ? normalized
+                    : existing.ServiceCode.Trim().ToLowerInvariant();
+                existing.DisplayName = string.IsNullOrWhiteSpace(existing.DisplayName)
+                    ? existing.ServiceCode
+                    : existing.DisplayName.Trim();
+                existing.IsActive = true;
                 existing.Rate = incoming.Rate;
                 existing.UpdatedAt = DateTime.UtcNow;
                 existing.IsDeleted = false;

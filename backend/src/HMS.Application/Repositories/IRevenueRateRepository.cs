@@ -4,10 +4,10 @@ namespace HMS.Application.Repositories;
 
 public interface IRevenueRateRepository
 {
-    Task<List<RevenueRate>> GetAllAsync();
+    Task<List<RevenueRate>> GetAllAsync(string? module = null, bool onlyActive = false);
     Task<RevenueRate?> GetByIdAsync(string id);
     Task<RevenueRate?> GetByVisitTypeAsync(string visitType);
-    Task<bool> ExistsByVisitTypeAsync(string visitType, string? excludeId = null);
+    Task<bool> ExistsByModuleAndServiceCodeAsync(string module, string serviceCode, string? excludeId = null);
     Task<RevenueRate> CreateAsync(RevenueRate rate);
     Task<RevenueRate> UpdateAsync(RevenueRate rate);
     Task DeleteAsync(string id);
