@@ -2,8 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import AppointmentDetailsSection from './appointment-sections/AppointmentDetailsSection';
-import RemindersSection, { Reminder } from './appointment-sections/RemindersSection';
-import Tabs from '../ui/Tabs';
+import { Reminder } from './appointment-sections/RemindersSection';
 import { PatientSummary } from '@/services/patientService';
 
 export interface AppointmentFormData {
@@ -91,33 +90,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     setErrors(prev => ({ ...prev, patient_name: '', patient_record_id: '' }));
   }, []);
 
-  const handleAddReminder = useCallback(() => {
-    const newReminder: Reminder = {
-      id: `rem-${Date.now()}`,
-      channel: 'email',
-      timing: '30min',
-    };
-    setFormData(prev => ({ ...prev, reminders: [...prev.reminders, newReminder] }));
-  }, []);
-
-  const handleRemoveReminder = useCallback((id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      reminders: prev.reminders.filter(r => r.id !== id),
-    }));
-  }, []);
-
-  const handleReminderChange = useCallback((
-    id: string,
-    field: 'channel' | 'timing',
-    value: string
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      reminders: prev.reminders.map(r => r.id === id ? { ...r, [field]: value } : r),
-    }));
-  }, []);
-
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!formData.patient_record_id) newErrors.patient_name = 'Select a patient from the search results';
@@ -147,32 +119,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
       </div>
 
       <form onSubmit={handleSubmit} className="pb-10">
-        <Tabs
-          tabs={[
-            {
-              label: 'Appointment Details',
-              content: (
-                <AppointmentDetailsSection
-                  formData={formData}
-                  errors={allErrors}
-                  onInputChange={handleInputChange}
-                  onPatientSelect={handlePatientSelect}
-                />
-              ),
-            },
-            {
-              label: `Reminders${formData.reminders.length > 0 ? ` (${formData.reminders.length})` : ''}`,
-              content: (
-                <RemindersSection
-                  reminders={formData.reminders}
-                  onAddReminder={handleAddReminder}
-                  onRemoveReminder={handleRemoveReminder}
-                  onReminderChange={handleReminderChange}
-                />
-              ),
-            },
-          ]}
-          defaultActive={0}
+        <AppointmentDetailsSection
+          formData={formData}
+          errors={allErrors}
+          onInputChange={handleInputChange}
+          onPatientSelect={handlePatientSelect}
         />
 
         {/* Form Actions */}
