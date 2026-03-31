@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, CalendarDays, IndianRupee, Save, Users } from 'lucide-react';
+import { Activity, CalendarDays, IndianRupee, Users } from 'lucide-react';
 import dashboardService, {
   AppointmentStatusMetric,
   DashboardMetrics,
   DailyTrendPoint,
-  RevenueRate,
 } from '@/services/dashboardService';
-import { notify } from '@/lib/toast';
 
 const STATUS_COLORS = ['bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-violet-500', 'bg-cyan-500'];
 
@@ -122,61 +120,9 @@ function DailyTrendsChart({ points }: { points: DailyTrendPoint[] }) {
   );
 }
 
-function RevenueRatesEditor({
-  rates,
-  onRateChange,
-  onSave,
-  isSaving,
-}: {
-  rates: RevenueRate[];
-  onRateChange: (visitType: string, value: string) => void;
-  onSave: () => void;
-  isSaving: boolean;
-}) {
-  return (
-    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Revenue Rate Settings</h2>
-          <p className="mt-1 text-xs text-gray-500">Admin configurable rates used for OPD standard pricing.</p>
-        </div>
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={isSaving || rates.length === 0}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Save size={14} />
-          {isSaving ? 'Saving...' : 'Save Rates'}
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {rates.map((rate) => (
-          <label key={rate.visitType} className="rounded-lg border border-gray-200 p-3">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-              {toLabel(rate.visitType)}
-            </span>
-            <input
-              type="number"
-              min={0}
-              step="1"
-              value={Number.isFinite(rate.rate) ? rate.rate : 0}
-              onChange={(event) => onRateChange(rate.visitType, event.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [revenueRates, setRevenueRates] = useState<RevenueRate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isSavingRates, setIsSavingRates] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -185,14 +131,10 @@ export default function Dashboard() {
     const loadMetrics = async () => {
       try {
         setLoading(true);
-        const [metricsResult, ratesResult] = await Promise.all([
-          dashboardService.getMetrics(7),
-          dashboardService.getRevenueRates(),
-        ]);
+        const metricsResult = await dashboardService.getMetrics(7);
 
         if (!isMounted) return;
         setMetrics(metricsResult);
-        setRevenueRates(ratesResult);
         setError('');
       } catch (e) {
         if (!isMounted) return;
@@ -210,7 +152,6 @@ export default function Dashboard() {
         if (!isMounted) return;
         setMetrics(latest);
       } catch {
-        // Skip silent refresh errors to avoid interrupting dashboard usage.
       }
     };
 
@@ -232,40 +173,9 @@ export default function Dashboard() {
     [dailyTrends]
   );
 
-  const handleRateChange = (visitType: string, value: string) => {
-    const numericValue = Number(value);
-    setRevenueRates((current) =>
-      current.map((rate) =>
-        rate.visitType === visitType
-          ? { ...rate, rate: Number.isFinite(numericValue) ? Math.max(0, numericValue) : 0 }
-          : rate
-      )
-    );
-  };
-
-  const handleSaveRates = async () => {
-    try {
-      setIsSavingRates(true);
-      const updatedRates = await dashboardService.updateRevenueRates(revenueRates);
-      setRevenueRates(updatedRates);
-
-      const latestMetrics = await dashboardService.getMetrics(7);
-      setMetrics(latestMetrics);
-
-      notify.success('Revenue rates updated', { id: 'dashboard:revenue-rates:save' });
-    } catch (e) {
-      notify.error(
-        e instanceof Error ? e.message : 'Failed to save revenue rates',
-        { id: 'dashboard:revenue-rates:error' }
-      );
-    } finally {
-      setIsSavingRates(false);
-    }
-  };
-
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Hospital Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500">Live operational metrics for front-desk and care teams.</p>
@@ -315,15 +225,6 @@ export default function Dashboard() {
           </div>
           <DailyTrendsChart points={dailyTrends} />
         </section>
-      </div>
-
-      <div className="mt-6">
-        <RevenueRatesEditor
-          rates={revenueRates}
-          onRateChange={handleRateChange}
-          onSave={handleSaveRates}
-          isSaving={isSavingRates}
-        />
       </div>
     </>
   );

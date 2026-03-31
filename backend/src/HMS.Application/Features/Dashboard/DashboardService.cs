@@ -25,12 +25,10 @@ public class DashboardService : IDashboardService
         var today = DateTime.UtcNow.Date;
         var startDate = today.AddDays(-(safeDays - 1));
 
-        // EF Core DbContext is not thread-safe; run queries sequentially
         var todaysPatients = await _dashboardMetricsRepository.GetPatientsCreatedOnDateAsync(today);
         var todaysAppointments = await _dashboardMetricsRepository.GetAppointmentsOnDateAsync(today);
         var revenueToday = await _dashboardMetricsRepository.GetBillingRevenueOnDateAsync(today);
         var statusBreakdownRaw = await _dashboardMetricsRepository.GetAppointmentStatusBreakdownAsync(today);
-        var visitTypeCounts = await _dashboardMetricsRepository.GetAppointmentVisitTypeCountsAsync(today);
         var patientCounts = await _dashboardMetricsRepository.GetDailyPatientCountsAsync(startDate, today);
         var appointmentCounts = await _dashboardMetricsRepository.GetDailyAppointmentCountsAsync(startDate, today);
 
@@ -84,12 +82,74 @@ public class DashboardService : IDashboardService
 
         return rates
             .OrderBy(rate => rate.VisitType)
-            .Select(rate => new RevenueRateDto
-            {
-                VisitType = rate.VisitType,
-                Rate = rate.Rate,
-            })
+            .Select(MapRevenueRate)
             .ToList();
+    }
+
+    public async Task<RevenueRateDto> GetRevenueRateByIdAsync(string id)
+    {
+        var rate = await _revenueRateRepository.GetByIdAsync(id);
+        if (rate is null)
+        {
+            throw new KeyNotFoundException("Revenue rate not found");
+        }
+
+        return MapRevenueRate(rate);
+    }
+
+    public async Task<RevenueRateDto> CreateRevenueRateAsync(CreateRevenueRateRequestDto request)
+    {
+        var normalizedVisitType = NormalizeVisitType(request.VisitType);
+        ValidateRevenueRate(normalizedVisitType, request.Rate);
+
+        if (await _revenueRateRepository.ExistsByVisitTypeAsync(normalizedVisitType))
+        {
+            throw new ArgumentException("A hospital standard rate with this service name already exists");
+        }
+
+        var created = await _revenueRateRepository.CreateAsync(new RevenueRate
+        {
+            VisitType = normalizedVisitType,
+            Rate = request.Rate,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        });
+
+        return MapRevenueRate(created);
+    }
+
+    public async Task<RevenueRateDto> UpdateRevenueRateAsync(string id, UpdateRevenueRateRequestDto request)
+    {
+        var existing = await _revenueRateRepository.GetByIdAsync(id);
+        if (existing is null)
+        {
+            throw new KeyNotFoundException("Revenue rate not found");
+        }
+
+        var normalizedVisitType = NormalizeVisitType(request.VisitType);
+        ValidateRevenueRate(normalizedVisitType, request.Rate);
+
+        if (await _revenueRateRepository.ExistsByVisitTypeAsync(normalizedVisitType, id))
+        {
+            throw new ArgumentException("A hospital standard rate with this service name already exists");
+        }
+
+        existing.VisitType = normalizedVisitType;
+        existing.Rate = request.Rate;
+
+        var updated = await _revenueRateRepository.UpdateAsync(existing);
+        return MapRevenueRate(updated);
+    }
+
+    public async Task DeleteRevenueRateAsync(string id)
+    {
+        var existing = await _revenueRateRepository.GetByIdAsync(id);
+        if (existing is null)
+        {
+            throw new KeyNotFoundException("Revenue rate not found");
+        }
+
+        await _revenueRateRepository.DeleteAsync(id);
     }
 
     public async Task<List<RevenueRateDto>> UpdateRevenueRatesAsync(UpdateRevenueRatesRequestDto request)
@@ -101,17 +161,18 @@ public class DashboardService : IDashboardService
 
         var normalized = request.Rates
             .Where(rate => !string.IsNullOrWhiteSpace(rate.VisitType))
-            .Select(rate => new RevenueRate
+            .Select(rate =>
             {
-                VisitType = rate.VisitType.Trim().ToLowerInvariant(),
-                Rate = rate.Rate,
+                var visitType = NormalizeVisitType(rate.VisitType);
+                ValidateRevenueRate(visitType, rate.Rate);
+
+                return new RevenueRate
+                {
+                    VisitType = visitType,
+                    Rate = rate.Rate,
+                };
             })
             .ToList();
-
-        if (normalized.Any(rate => rate.Rate < 0))
-        {
-            throw new ArgumentException("Revenue rate cannot be negative");
-        }
 
         await _revenueRateRepository.UpsertManyAsync(normalized);
         return await GetRevenueRatesAsync();
@@ -164,16 +225,6 @@ public class DashboardService : IDashboardService
         return MapHospitalSettings(upserted);
     }
 
-    private async Task<Dictionary<string, decimal>> GetVisitTypeRatesAsync()
-    {
-        var rates = await GetRevenueRatesAsync();
-        return rates.ToDictionary(
-            rate => rate.VisitType,
-            rate => rate.Rate,
-            StringComparer.OrdinalIgnoreCase
-        );
-    }
-
     private static Dictionary<string, decimal> GetDefaultVisitTypeRates()
     {
         return new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
@@ -186,24 +237,32 @@ public class DashboardService : IDashboardService
         };
     }
 
-    private static decimal CalculateRevenue(Dictionary<string, int> visitTypeCounts, Dictionary<string, decimal> visitTypeRates)
+    private static string NormalizeVisitType(string visitType)
     {
-        decimal total = 0m;
+        return visitType.Trim().ToLowerInvariant();
+    }
 
-        foreach (var item in visitTypeCounts)
+    private static void ValidateRevenueRate(string visitType, decimal rate)
+    {
+        if (string.IsNullOrWhiteSpace(visitType))
         {
-            if (item.Value <= 0)
-            {
-                continue;
-            }
-
-            if (visitTypeRates.TryGetValue(item.Key, out var rate))
-            {
-                total += rate * item.Value;
-            }
+            throw new ArgumentException("Service name is required");
         }
 
-        return total;
+        if (rate < 0)
+        {
+            throw new ArgumentException("Revenue rate cannot be negative");
+        }
+    }
+
+    private static RevenueRateDto MapRevenueRate(RevenueRate rate)
+    {
+        return new RevenueRateDto
+        {
+            Id = rate.Id,
+            VisitType = rate.VisitType,
+            Rate = rate.Rate,
+        };
     }
 
     private static HospitalSettingsDto MapHospitalSettings(HospitalSettings settings)

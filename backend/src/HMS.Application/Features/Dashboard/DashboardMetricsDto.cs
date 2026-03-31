@@ -29,6 +29,19 @@ public class DashboardMetricsDto
 
 public class RevenueRateDto
 {
+    public string Id { get; set; } = string.Empty;
+    public string VisitType { get; set; } = string.Empty;
+    public decimal Rate { get; set; }
+}
+
+public class CreateRevenueRateRequestDto
+{
+    public string VisitType { get; set; } = string.Empty;
+    public decimal Rate { get; set; }
+}
+
+public class UpdateRevenueRateRequestDto
+{
     public string VisitType { get; set; } = string.Empty;
     public decimal Rate { get; set; }
 }

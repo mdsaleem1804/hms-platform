@@ -26,8 +26,7 @@ export default function DoctorServiceRatesPage() {
         </Link>
       </div>
 
-      {/* Display manager component directly or in modal */}
-      <DoctorServiceRateManager isOpen={isManagerOpen} onClose={() => setIsManagerOpen(true)} />
+      <DoctorServiceRateManager isOpen={isManagerOpen} onClose={() => setIsManagerOpen(true)} embedded={true} />
     </div>
   );
 }

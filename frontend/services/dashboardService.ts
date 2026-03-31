@@ -24,6 +24,12 @@ export interface DashboardMetrics {
 }
 
 export interface RevenueRate {
+  id: string;
+  visitType: string;
+  rate: number;
+}
+
+export interface RevenueRatePayload {
   visitType: string;
   rate: number;
 }
@@ -65,6 +71,20 @@ class DashboardService {
       rates,
     });
     return (response.data?.data ?? []) as RevenueRate[];
+  }
+
+  async createRevenueRate(payload: RevenueRatePayload): Promise<RevenueRate> {
+    const response = await apiClient.post('/api/dashboard/revenue-rates', payload);
+    return (response.data?.data ?? {}) as RevenueRate;
+  }
+
+  async updateRevenueRate(id: string, payload: RevenueRatePayload): Promise<RevenueRate> {
+    const response = await apiClient.put(`/api/dashboard/revenue-rates/${id}`, payload);
+    return (response.data?.data ?? {}) as RevenueRate;
+  }
+
+  async deleteRevenueRate(id: string): Promise<void> {
+    await apiClient.delete(`/api/dashboard/revenue-rates/${id}`);
   }
 
   async getHospitalSettings(): Promise<HospitalSettings> {

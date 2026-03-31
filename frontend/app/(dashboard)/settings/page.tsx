@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Save } from 'lucide-react';
 import dashboardService, { HospitalSettings } from '@/services/dashboardService';
 import { DoctorServiceRateManager } from '@/components/billing/DoctorServiceRateManager';
+import { HospitalStandardRateManager } from '@/components/billing/HospitalStandardRateManager';
 import { notify } from '@/lib/toast';
 
 const defaultSettings: HospitalSettings = {
@@ -150,12 +151,11 @@ export default function HospitalSettingsPage() {
         )}
       </div>
 
-      {/* Tabs */}
       <div className="border-b border-gray-200">
         <div className="flex gap-8">
           <button
             onClick={() => setActiveTab('hospital')}
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition ${
+            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${
               activeTab === 'hospital'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -165,7 +165,7 @@ export default function HospitalSettingsPage() {
           </button>
           <button
             onClick={() => setActiveTab('service-rates')}
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition ${
+            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${
               activeTab === 'service-rates'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -176,7 +176,6 @@ export default function HospitalSettingsPage() {
         </div>
       </div>
 
-      {/* Hospital Settings Tab */}
       {activeTab === 'hospital' && (
         <>
           <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -222,9 +221,18 @@ export default function HospitalSettingsPage() {
         </>
       )}
 
-      {/* Service Rates Tab */}
       {activeTab === 'service-rates' && (
-        <DoctorServiceRateManager isOpen={true} onClose={() => setActiveTab('hospital')} />
+        <div className="space-y-6">
+          <section className="rounded-xl border border-blue-100 bg-blue-50 p-5 text-sm text-blue-900 shadow-sm">
+            <h2 className="text-lg font-semibold text-blue-950">Service Rate Configuration</h2>
+            <p className="mt-1">
+              Keep hospital standard rates and doctor-specific overrides together in Settings so Dashboard remains reporting-only.
+            </p>
+          </section>
+
+          <HospitalStandardRateManager />
+          <DoctorServiceRateManager isOpen={true} onClose={() => setActiveTab('hospital')} embedded={true} />
+        </div>
       )}
     </div>
   );
