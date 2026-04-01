@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "HMS.IntegrationTests": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:10217;http://localhost:10218"
+    }
+  }
+}
