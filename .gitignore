@@ -7,7 +7,6 @@
 **/packages/
 
 # Environment
-.env
 .env.local
 .env.*.local
 appsettings.local.json
