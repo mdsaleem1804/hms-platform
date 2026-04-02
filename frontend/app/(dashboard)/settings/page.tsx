@@ -7,6 +7,7 @@ import dashboardService, { HospitalSettings } from '@/services/dashboardService'
 import { DoctorServiceRateManager } from '@/components/billing/DoctorServiceRateManager';
 import { HospitalStandardRateManager } from '@/components/billing/HospitalStandardRateManager';
 import { DepartmentManager } from '@/components/admin/DepartmentManager';
+import { DoctorManager } from '@/components/admin/DoctorManager';
 import { notify } from '@/lib/toast';
 
 const defaultSettings: HospitalSettings = {
@@ -60,12 +61,12 @@ export default function HospitalSettingsPage() {
   const [formData, setFormData] = useState<HospitalSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'hospital' | 'service-rates' | 'departments'>('hospital');
+  const [activeTab, setActiveTab] = useState<'hospital' | 'service-rates' | 'departments' | 'doctors'>('hospital');
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab === 'service-rates' || tab === 'departments') {
-      setActiveTab(tab as 'service-rates' | 'departments');
+    if (tab === 'service-rates' || tab === 'departments' || tab === 'doctors') {
+      setActiveTab(tab as 'service-rates' | 'departments' | 'doctors');
     }
   }, [searchParams]);
 
@@ -184,6 +185,16 @@ export default function HospitalSettingsPage() {
           >
             Service Rates
           </button>
+          <button
+            onClick={() => setActiveTab('doctors')}
+            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${
+              activeTab === 'doctors'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Doctor Master
+          </button>
         </div>
       </div>
 
@@ -256,6 +267,19 @@ export default function HospitalSettingsPage() {
 
           <HospitalStandardRateManager />
           <DoctorServiceRateManager isOpen={true} onClose={() => setActiveTab('hospital')} embedded={true} />
+        </div>
+      )}
+
+      {activeTab === 'doctors' && (
+        <div className="space-y-6">
+          <section className="rounded-xl border border-blue-100 bg-blue-50 p-5 text-sm text-blue-900 shadow-sm">
+            <h2 className="text-lg font-semibold text-blue-950">Doctor Master</h2>
+            <p className="mt-1">
+              Manage hospital doctors with their specializations and contact information. Assign doctors to departments for appointment scheduling and service rate management.
+            </p>
+          </section>
+
+          <DoctorManager />
         </div>
       )}
     </div>
