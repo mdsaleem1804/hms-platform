@@ -4,6 +4,39 @@
 
 A **production-ready monorepo skeleton** for Hospital Management System with **57 files** across **24 directories**, following **Clean Architecture** principles and modern development standards.
 
+**📢 Latest Status (April 2, 2026)**: Deployment configuration complete with VPS production setup at **153.75.224.163**
+
+---
+
+## � RECENT DEPLOYMENT UPDATES (April 2, 2026)
+
+### Production VPS Configuration
+- ✅ **Frontend** deployed to: http://153.75.224.163:3000
+- ✅ **Backend API** running on: http://153.75.224.163:7000
+- ✅ **Swagger Docs** available at: http://153.75.224.163:7000/swagger
+
+### Database & Security
+- ✅ **JWT Secret Key**: `JWTSecretKey@2026!LakshmiHospitals#RandomSecure789`
+- ✅ **Database**: PostgreSQL 16 Alpine with health checks
+- ✅ **Migrations**: Switched from manual SQL to Entity Framework Core
+- ✅ **CORS Configuration**: Configured for VPS URLs and localhost
+
+### Docker Compose Optimizations
+- ✅ **Service Health Checks**: Database readiness verification
+- ✅ **Network Isolation**: hms-network bridge for secure communication
+- ✅ **Volume Persistence**: postgres_data for permanent storage
+- ✅ **Environment Management**: .env file for configuration
+
+### Frontend Improvements
+- ✅ **Dockerfile**: Optimized multi-stage build, removed unnecessary public folder copy
+- ✅ **API Integration**: All services pointing to VPS backend
+- ✅ **Environment Variables**: NEXT_PUBLIC_API_URL configured for VPS
+
+### Development Files
+- ✅ **.env file**: Production configuration with secure credentials
+- ✅ **Database Schema**: SQL files renamed with numeric prefixes (01_, 02_, etc.) for proper ordering
+- ✅ **Deployment Guide**: Comprehensive [DEPLOYMENT.md](DEPLOYMENT.md) with VPS instructions
+
 ---
 
 ## 📦 WHAT'S BEEN CREATED
@@ -16,15 +49,16 @@ A **production-ready monorepo skeleton** for Hospital Management System with **5
 ✅ Pages: Dashboard, Patients, Appointments
 ✅ Components: Sidebar, Header, Tables, UI Elements
 ✅ Custom Hooks: usePatients, useAppointments
-✅ API Service: Centralized Axios client
+✅ API Service: Centralized Axios client with VPS integration
 ✅ Configuration: TypeScript, Tailwind, Environment
-✅ Docker: Multi-stage build
+✅ Docker: Multi-stage build optimized for production
+✅ Environment: .env file with VPS URLs
 ```
 
 **Key Files**:
 - [frontend/app/(dashboard)/layout.tsx](frontend/app/\(dashboard\)/layout.tsx) - Dashboard layout
-- [frontend/services/api.ts](frontend/services/api.ts) - HTTP client
-- [frontend/hooks/usePatients.ts](frontend/hooks/usePatients.ts) - Patient data hook
+- [frontend/services/api.ts](frontend/services/api.ts) - HTTP client pointing to VPS
+- [frontend/lib/api.ts](frontend/lib/api.ts) - API base URL configuration (153.75.224.163:7000)
 - [frontend/package.json](frontend/package.json) - Dependencies
 
 ---
@@ -40,11 +74,13 @@ A **production-ready monorepo skeleton** for Hospital Management System with **5
 ✅ Dependency Injection: Configured in extensions
 ✅ Global Middleware: Exception handling
 ✅ Logging: Serilog integration ready
-✅ Docker: Production-ready image
+✅ Docker: Production-ready image with EF migrations
+✅ JWT Authentication: Configured and ready
+✅ CORS: VPS URLs configured
 ```
 
 **Key Files**:
-- [backend/src/HMS.API/Program.cs](backend/src/HMS.API/Program.cs) - Application entry point
+- [backend/src/HMS.API/Program.cs](backend/src/HMS.API/Program.cs) - Application entry point with JWT & CORS
 - [backend/src/HMS.API/Controllers/PatientsController.cs](backend/src/HMS.API/Controllers/PatientsController.cs) - Patient endpoints
 - [backend/src/HMS.Domain/Entities/Patient.cs](backend/src/HMS.Domain/Entities/Patient.cs) - Entity model
 - [backend/src/HMS.Infrastructure/Persistence/AppDbContext.cs](backend/src/HMS.Infrastructure/Persistence/AppDbContext.cs) - Database context
@@ -55,14 +91,15 @@ A **production-ready monorepo skeleton** for Hospital Management System with **5
 **7 files** - Production-ready schema
 
 ```
-✅ Tables: Patients, Doctors, Appointments, Visits, DoctorSchedules
+✅ Tables: Patients, Doctors, Appointments, Visits, DoctorSchedules, Billing
 ✅ UUID Primary Keys (microservice-ready)
 ✅ Audit Fields: created_at, updated_at, is_deleted
 ✅ Indexes: On frequently queried columns
 ✅ Constraints: Foreign keys, unique constraints
 ✅ Soft Deletes: Data retention capability
-✅ Migrations: Versioned (V1__init.sql)
+✅ EF Migrations: Database schema management
 ✅ Seed Data: Sample records
+✅ Named Schema Files: Sequential numbering (01_, 02_, etc.)
 ```
 
 **Key Features**:
@@ -70,33 +107,36 @@ A **production-ready monorepo skeleton** for Hospital Management System with **5
 - Doctor schedules for availability
 - Appointments with time slots
 - Visits for encounters
+- Billing tables for invoicing
 - Proper referential integrity
 
 ---
 
-### 4️⃣ DOCUMENTATION (5 files)
+### 4️⃣ DOCUMENTATION (6 files)
 **Comprehensive guides** for development and deployment
 
-| File | Content |
-|------|---------|
-| [docs/architecture.md](docs/architecture.md) | System design, layers, data flow, ERD |
-| [docs/skills.md](docs/skills.md) | Coding standards, naming conventions, best practices |
-| [docs/modules.md](docs/modules.md) | Module descriptions, features, future roadmap |
-| [README.md](README.md) | Project overview, quick start, tech stack |
-| [API_RESPONSES.md](API_RESPONSES.md) | API endpoint examples, error codes |
+| File | Content | Status |
+|------|---------|--------|
+| [DEPLOYMENT.md](DEPLOYMENT.md) | VPS deployment guide, Docker setup | ✅ Updated |
+| [docs/architecture.md](docs/architecture.md) | System design, layers, data flow, ERD | ✅ Current |
+| [docs/skills.md](docs/skills.md) | Coding standards, naming conventions | ✅ Current |
+| [docs/modules.md](docs/modules.md) | Module descriptions, features | ✅ Current |
+| [README.md](README.md) | Project overview, quick start | ✅ Current |
+| [API_RESPONSES.md](API_RESPONSES.md) | API endpoint examples, error codes | ✅ Current |
 
 ---
 
-### 5️⃣ CONFIGURATION & DEVOPS (8 files)
+### 5️⃣ CONFIGURATION & DEVOPS (9 files)
 
 ```
-✅ docker-compose.yml      - All services in one command
+✅ docker-compose.yml      - All services with health checks & VPS config
+✅ .env                   - Production environment variables
 ✅ .env.example           - Environment template
 ✅ .gitignore             - Git ignore rules
 ✅ Dockerfile             - Frontend & Backend containers
 ✅ scripts/setup.sh       - Automation script
 ✅ SETUP_CHECKLIST.md     - Deployment checklist
-✅ PROJECT_SUMMARY.md     - What's been created
+✅ DEPLOYMENT.md          - VPS deployment guide
 ✅ DIRECTORY_STRUCTURE.md - Complete file map
 ```
 
@@ -104,33 +144,33 @@ A **production-ready monorepo skeleton** for Hospital Management System with **5
 
 ## 🎯 QUICK START (3 STEPS)
 
-### Step 1: Install Frontend
+### Step 1: Local Development with Docker
 ```bash
-cd frontend
-npm install
-npm run dev
-# Runs on http://localhost:3000
-```
+# Configure env
+cp .env.example .env
 
-### Step 2: Install Backend
-```bash
-cd backend/src/HMS.API
-dotnet build
-dotnet run
-# Runs on https://localhost:5134
-```
-
-### Step 3: Setup Database
-```bash
-createdb hms_platform
-psql -U postgres -d hms_platform -f database/schema/patients.sql
-# ... run other schema files
-psql -U postgres -d hms_platform -f database/seed/seed_data.sql
-```
-
-**Or Docker (all-in-one)**:
-```bash
+# Start all services
 docker-compose up --build
+
+# Access services
+# Frontend: http://localhost:3000
+# Backend: http://localhost:7000
+# Swagger: http://localhost:7000/swagger
+```
+
+### Step 2: Production Deployment
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete VPS deployment instructions:
+```bash
+# On VPS at 153.75.224.163
+docker-compose up --build -d
+
+# Services automatically start and run health checks
+```
+
+### Step 3: Database Initialization
+```bash
+# Automatic! Entity Framework migrations run on startup
+# Check: docker compose logs backend
 ```
 
 ---
@@ -150,10 +190,10 @@ Entities (Domain Model)
 
 ### Feature-Based Backend
 ```
-HMS.API (Controllers, DI, Middleware)
+HMS.API (Controllers, DI, Middleware, JWT)
 HMS.Application (Services, DTOs, Feature folders)
 HMS.Domain (Entities, Enums, Business Rules)
-HMS.Infrastructure (Repositories, DbContext)
+HMS.Infrastructure (Repositories, DbContext, Migrations)
 ```
 
 ### Modular Frontend
@@ -164,25 +204,64 @@ Components (UI)
     ↓
 Hooks (Data Logic)
     ↓
-Services (API Calls)
+Services (API Calls → VPS Backend)
 ```
 
 ---
 
 ## 📊 KEY METRICS
 
-| Aspect | Status |
-|--------|--------|
-| **Type Safety** | ✅ 100% TypeScript (frontend), C# strict (backend) |
-| **Architecture** | ✅ Clean Architecture, SOLID principles |
-| **Code Organization** | ✅ Feature-based, modular, extensible |
-| **Standards** | ✅ Comprehensive documentation |
-| **Production Ready** | ✅ Error handling, logging, validation |
-| **Scalability** | ✅ UUID keys, soft deletes, audit trails |
-| **DevOps** | ✅ Docker, environment management |
-| **Testing** | ✅ Folder structure for UnitTests, IntegrationTests |
-| **Database** | ✅ Proper schema, indexes, constraints |
-| **API Design** | ✅ RESTful, standardized responses |
+| Aspect | Status | Details |
+|--------|--------|---------|
+| **Type Safety** | ✅ 100% | TypeScript (frontend), C# strict (backend) |
+| **Architecture** | ✅ Complete | Clean Architecture, SOLID principles |
+| **Code Organization** | ✅ Feature-based | Modular, extensible, maintainable |
+| **Standards** | ✅ Comprehensive | Documentation, naming conventions |
+| **Production Ready** | ✅ Deployed | VPS setup, health checks, error handling |
+| **Scalability** | ✅ Designed | UUID keys, soft deletes, audit trails |
+| **DevOps** | ✅ Configured | Docker, Docker Compose, environment management |
+| **Testing** | ✅ Structure Ready | UnitTests, IntegrationTests folders |
+| **Database** | ✅ Optimized | PostgreSQL 16, EF Migrations, proper schema |
+| **API Design** | ✅ RESTful | Standardized responses, error handling |
+| **Deployment** | ✅ VPS Ready | 153.75.224.163 with secure config |
+
+---
+
+## 🔐 DEPLOYMENT SECURITY
+
+### JWT Configuration
+```
+Secret: JWTSecretKey@2026!LakshmiHospitals#RandomSecure789
+Expiration: 60 minutes
+Issuer: hms-platform
+Audience: hms-platform-users
+```
+
+### CORS Allowed Origins
+```
+http://localhost:3000
+http://frontend:3000
+http://153.75.224.163:3000
+http://localhost:7000
+```
+
+### Database Security
+```
+Engine: PostgreSQL 16 Alpine
+User: postgres
+Password: Environment variable (POSTGRES_PASSWORD)
+Port: 5432 (internal)
+Database: hms_platform
+```
+
+### Production VPS
+```
+IP: 153.75.224.163
+Frontend Port: 3000
+Backend Port: 7000
+Database: Internal (5432)
+Network: Bridge (hms-network)
+```
 
 ---
 
@@ -208,18 +287,85 @@ Services (API Calls)
 - Consultation fees
 - Working schedules
 
+### Billing Module (Prepared) 📋
+- Billing tables created
+- Invoice structure ready
+- Item tracking prepared
+
 ### Future Modules (Structure Ready)
 - Visit/Encounter tracking
-- Billing & Invoicing
-- WhatsApp/SMS Notifications
 - Prescription management
 - Lab/Imaging integration
+- WhatsApp/SMS Notifications
 
 ---
 
-## 🔐 PRODUCTION-READY FEATURES
+## 🔄 DEVELOPMENT WORKFLOW
 
-✅ **Global Exception Middleware** - Standardized error handling  
+1. **Create Branch**: `git checkout -b feature/[module-name]`
+2. **Follow Standards**: Reference [docs/skills.md](docs/skills.md)
+3. **Maintain Architecture**: Reference [docs/architecture.md](docs/architecture.md)
+4. **Test Locally**: Run `docker-compose up` and verify
+5. **Commit Often**: Atomic, meaningful commits
+6. **Deploy to VPS**: See [DEPLOYMENT.md](DEPLOYMENT.md)
+
+---
+
+## 🚀 DEPLOYMENT READY
+
+### Local Environment
+```bash
+docker-compose up
+# Frontend: http://localhost:3000
+# Backend: http://localhost:7000
+# Swagger: http://localhost:7000/swagger
+```
+
+### Production (VPS 153.75.224.163)
+```bash
+docker-compose up --build -d
+# Frontend: http://153.75.224.163:3000
+# Backend: http://153.75.224.163:7000
+# Swagger: http://153.75.224.163:7000/swagger
+```
+
+### Production Checklist
+- ✅ Environment variables configured
+- ✅ Database migrations automated (EF)
+- ✅ CORS configured for VPS
+- ✅ JWT authentication implemented
+- ✅ Docker health checks enabled
+- ✅ Deployment guide documented
+- 📋 SSL/TLS certificates (pending)
+- 📋 Monitoring & logging (advanced setup)
+
+---
+
+## 📊 FILE INVENTORY
+
+```
+Total Files: 57+
+├── Frontend:       22 files (App Router, Components, Hooks, Services)
+├── Backend:        15 files (Controllers, Services, Entities, Repositories)
+├── Database:        7 files (Schemas, Migrations, Seed Data)
+├── Documentation:   6 files (Architecture, Deployment, Standards, API)
+├── Config:          9 files (Docker, Environment, Scripts, Deployment)
+```
+
+---
+
+## 🔗 QUICK LINKS
+
+**For Development**: [README.md](README.md)  
+**For Deployment**: [DEPLOYMENT.md](DEPLOYMENT.md)  
+**For Architecture**: [docs/architecture.md](docs/architecture.md)  
+**For Coding Standards**: [docs/skills.md](docs/skills.md)  
+**For API Reference**: [API_RESPONSES.md](API_RESPONSES.md)  
+
+**Production VPS**: http://153.75.224.163 (API on port 7000)
+
+**Last Updated**: April 2, 2026  
+**Version**: 1.0 - Production Ready  
 ✅ **Logging Strategy** - Serilog integration ready  
 ✅ **Environment Configuration** - .env management  
 ✅ **CORS Configuration** - Cross-origin support  
