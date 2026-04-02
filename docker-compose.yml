@@ -10,15 +10,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:7000
+      - NEXT_PUBLIC_API_URL=${PUBLIC_API_URL:-http://153.75.224.163:7000}
       - NEXT_PUBLIC_APP_NAME=HMS Platform
     depends_on:
       - backend
     networks:
       - hms-network
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
 
   # Backend Service
   backend:
@@ -30,16 +27,15 @@ services:
       - "7000:7000"
       - "5000:5000"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=hms_platform;Username=postgres;Password=postgres
-      - CORS__AllowedOrigins=http://localhost:3000,http://frontend:3000
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=hms_platform;Username=postgres;Password=${POSTGRES_PASSWORD:-change-me-now}
+      - CORS__AllowedOrigins=http://localhost:3000,http://frontend:3000,http://153.75.224.163:3000
+      - JwtSettings__SecretKey=${JWT_SECRET:-change-this-32-char-min-secret}
     depends_on:
       database:
         condition: service_healthy
     networks:
       - hms-network
-    volumes:
-      - ./backend:/app
 
   # Database Service (PostgreSQL)
   database:
@@ -49,7 +45,7 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change-me-now}
       - POSTGRES_DB=hms_platform
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -71,9 +67,9 @@ volumes:
     driver: local
 
 # Notes:
-# - Frontend runs on http://localhost:3000
-# - Backend API runs on http://localhost:7000
-# - Database runs on localhost:5432
+# - Frontend runs on http://153.75.224.163:3000
+# - Backend API runs on http://153.75.224.163:7000
+# - Database listens on port 5432
 # - All services communicate via 'hms-network'
 #
 # To run: docker-compose up --build
