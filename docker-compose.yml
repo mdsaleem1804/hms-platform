@@ -8,8 +8,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=${PUBLIC_API_URL:-http://153.75.224.163:7000}
-      - NEXT_PUBLIC_APP_NAME=HMS Platform
+      NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://153.75.224.163:7000}
+      NEXT_PUBLIC_APP_NAME: HMS Platform
     depends_on:
       - backend
     networks:
@@ -25,10 +25,10 @@ services:
       - "7000:7000"
       - "5000:5000"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=hms_platform;Username=postgres;Password=${POSTGRES_PASSWORD:-change-me-now}
-      - CORS__AllowedOrigins=http://localhost:3000,http://frontend:3000,http://153.75.224.163:3000
-      - JwtSettings__SecretKey=${JWT_SECRET:-JWTSecretKey@2026!LakshmiHospitals#RandomSecure789}
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=database;Port=5432;Database=hms_platform;Username=postgres;Password=${POSTGRES_PASSWORD:-change-me-now}
+      CORS__AllowedOrigins: http://localhost:3000,http://frontend:3000,http://153.75.224.163:3000,http://153.75.224.163:7000
+      JwtSettings__SecretKey: ${JWT_SECRET:-JWTSecretKey@2026!LakshmiHospitals#RandomSecure789}
     depends_on:
       database:
         condition: service_healthy
@@ -42,9 +42,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change-me-now}
-      - POSTGRES_DB=hms_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-now}
+      POSTGRES_DB: hms_platform
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/schema:/docker-entrypoint-initdb.d
@@ -63,13 +63,3 @@ networks:
 volumes:
   postgres_data:
     driver: local
-
-# Notes:
-# - Frontend runs on http://153.75.224.163:3000
-# - Backend API runs on http://153.75.224.163:7000
-# - Database listens on port 5432
-# - All services communicate via 'hms-network'
-#
-# To run: docker-compose up --build
-# To stop: docker-compose down
-# To view logs: docker-compose logs -f [service_name]
