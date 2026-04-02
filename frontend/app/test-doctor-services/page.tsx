@@ -15,7 +15,7 @@ export default function TestDoctorServicesPage() {
     const loadDoctors = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:7000/api/doctors');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/doctors`);
         const data = await response.json();
         console.log('Doctors response:', data);
         setDoctors(data.data || []);
