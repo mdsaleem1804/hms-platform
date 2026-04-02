@@ -42,14 +42,16 @@ builder.Services.AddControllers()
 // CORS Configuration for Frontend Integration
 builder.Services.AddCors(options =>
 {
-    // Policy for frontend development (Next.js on localhost:3000)
+    // Update CORS policy to allow specific origins
     options.AddPolicy("AllowFrontend", policy =>
     {
-        // TODO: Restrict to specific origins before production deployment
-        // Previously allowed: localhost:3000, 127.0.0.1:3000, 192.168.1.6:3000
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.WithOrigins(
+            "http://localhost:3000",
+            "http://frontend:3000",
+            "http://153.75.224.163:3000"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
     
     // Fallback policy for other environments (if needed)
