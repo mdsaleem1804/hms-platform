@@ -1,17 +1,4 @@
--- Migration: V1__initial_schema.sql
--- This file documents the initial schema creation
--- Use the individual schema files (patients.sql, doctors.sql, etc.) for reference
--- Combined execution order:
--- 1. patients.sql
--- 2. doctors.sql
--- 3. doctor_schedules.sql
--- 4. appointments.sql
--- 5. visits.sql
--- 6. billing.sql
--- 7. billing_items.sql
--- 8. hospital_settings.sql
-
--- Hospital Settings Table (Added April 2, 2026)
+-- Hospital Settings Table
 CREATE TABLE IF NOT EXISTS hospital_settings (
     id CHARACTER VARYING(50) PRIMARY KEY,
     hospital_name CHARACTER VARYING(200) NOT NULL,
@@ -35,4 +22,4 @@ CREATE TABLE IF NOT EXISTS hospital_settings (
 );
 
 -- Create index on creation date for sorting
-CREATE INDEX IF NOT EXISTS idx_hospital_settings_created_at ON hospital_settings(created_at DESC);
+CREATE INDEX idx_hospital_settings_created_at ON hospital_settings(created_at DESC);
