@@ -27,7 +27,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: Host=database;Port=5432;Database=hms_platform;Username=postgres;Password=${POSTGRES_PASSWORD:-change-me-now}
-      CORS__AllowedOrigins: http://localhost:3000,http://frontend:3000,http://153.75.224.163:3000,http://153.75.224.163:7000
+      CORS__AllowedOrigins: http://localhost:3000,http://frontend:3000,http://153.75.224.163:3000,http://localhost:7000
       JwtSettings__SecretKey: ${JWT_SECRET:-JWTSecretKey@2026!LakshmiHospitals#RandomSecure789}
     depends_on:
       database:
