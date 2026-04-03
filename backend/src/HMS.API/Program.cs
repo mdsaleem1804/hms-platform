@@ -96,44 +96,8 @@ app.UseCors("AllowFrontend");
 app.MapControllers();
 app.MapGet("/", () => Results.Ok(new { message = "HMS API is running" }));
 
-// Database initialization
-try
-{
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-
-        // Apply migrations
-        try
-        {
-            logger.LogInformation("Applying database migrations...");
-            dbContext.Database.Migrate();
-            logger.LogInformation("Database migrations applied successfully");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error applying database migrations");
-        }
-
-        // Seed default users
-        try
-        {
-            var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-            logger.LogInformation("Seeding default users...");
-            await UserSeeder.SeedDefaultUsersAsync(dbContext, passwordHasher);
-            logger.LogInformation("Default users seeded successfully");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error seeding default users");
-        }
-    }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Error during database initialization: {ex}");
-}
+// Database is pre-initialized (restored from backup)
+// Skipping all database migration and deployment steps
 
 try
 {
@@ -147,3 +111,12 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// Uncomment the following lines to enable database migration and seeding
+// using (var scope = app.Services.CreateScope())
+// {
+//     var services = scope.ServiceProvider;
+//     var context = services.GetRequiredService<ApplicationDbContext>();
+//     context.Database.Migrate();
+//     SeedData.Initialize(services);
+// }
