@@ -113,6 +113,53 @@ export interface CreatePatientPayload {
   };
 }
 
+export interface AppointmentResponse {
+  id: string;
+  displayId: number;
+  appointmentNo: string;
+  patientId: number;
+  patientUhid: string;
+  patientName: string;
+  doctorId: string;
+  doctorName: string;
+  doctorSpecialization: string;
+  departmentId: string;
+  departmentName: string;
+  appointmentDate: string;
+  startTime: string;
+  endTime: string;
+  tokenNumber: number;
+  status: string;
+  visitType: string;
+  priority: string;
+  notes: string;
+  opdPaymentStatus: string;
+  createdAt: string;
+}
+
+export interface BillingResponse {
+  id: string;
+  billNumber: string;
+  patientId: number;
+  patientName: string;
+  patientUhid: string;
+  appointmentId: string | null;
+  visitType: string;
+  doctorId: string;
+  doctorName: string;
+  date: string;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  netAmount: number;
+  paidAmount: number;
+  balanceAmount: number;
+  status: string;
+  paymentMode: string;
+  transactionId: string | null;
+  createdAt: string;
+}
+
 export interface PatientResponse {
   id: number;
   createdAt: string;
@@ -133,6 +180,165 @@ export interface PatientResponse {
   emergencyContact: EmergencyContactData;
   attender: AttenderData;
   referral: ReferralData;
+  previousAppointments?: AppointmentResponse[];
+  currentAppointment?: AppointmentResponse | null;
+  opdBillings?: BillingResponse[];
+  ecgBillings?: BillingResponse[];
+  xrayBillings?: BillingResponse[];
+  labBillings?: BillingResponse[];
+  ipBillings?: BillingResponse[];
+}
+
+export interface MedicalHistoryResponse {
+  id: string;
+  patientId: number;
+  knownAllergies?: string;
+  hasDrugAllergy: boolean;
+  hasFoodAllergy: boolean;
+  allergySeverity?: string;
+  chronicConditions?: string;
+  isDiabetic: boolean;
+  isHypertensive: boolean;
+  hasHeartDisease: boolean;
+  hasAsthma: boolean;
+  hasKidneyDisease: boolean;
+  hasThyroidDisease: boolean;
+  familyHistoryOfDiabetes?: string;
+  familyHistoryOfHeartDisease?: string;
+  familyHistoryOfCancer?: string;
+  otherFamilyHistory?: string;
+  previousSurgeries?: string;
+  vaccinations?: string;
+  isSmoker: boolean;
+  usesAlcohol: boolean;
+  exerciseFrequency?: string;
+  pastMedications?: string;
+  currentMedications?: string;
+  additionalNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VitalSignsResponse {
+  id: string;
+  patientId: number;
+  temperature?: number;
+  systolicBP?: number;
+  diastolicBP?: number;
+  pulseRate?: number;
+  respiratoryRate?: number;
+  oxygenSaturation?: number;
+  weight?: number;
+  height?: number;
+  bmi?: number;
+  notes?: string;
+  recordedByUserId?: string;
+  recordedByUserName?: string;
+  recordedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MedicationMedicalResponse {
+  id: string;
+  patientId: number;
+  medicationName: string;
+  dosage: string;
+  frequency: string;
+  route: string;
+  reason?: string;
+  startDate: string;
+  endDate?: string;
+  isActive: boolean;
+  prescribedByDoctorId?: string;
+  prescribedByDoctorName?: string;
+  prescriptionDate?: string;
+  sideEffects?: string;
+  contraindications?: string;
+  instructions?: string;
+  isMandatory?: boolean;
+  refillCount?: number;
+  refillsRemaining?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LabReportMedicalResponse {
+  id: string;
+  patientId: number;
+  reportNumber: string;
+  testName: string;
+  testCategory: string;
+  testDate: string;
+  resultDate?: string;
+  status: string;
+  testResult?: string;
+  isAbnormal: boolean;
+  abnormalityReason?: string;
+  normalRange?: string;
+  reportFilePath?: string;
+  orderedByDoctorId?: string;
+  orderedByDoctorName?: string;
+  referenceLab?: string;
+  cost?: number;
+  notes?: string;
+  recommendations?: string;
+  isPatientCritical: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProgressNoteMedicalResponse {
+  id: string;
+  patientId: number;
+  title: string;
+  noteType: string;
+  noteContent: string;
+  diagnosis?: string;
+  treatmentPlan?: string;
+  observations?: string;
+  recommendations?: string;
+  isCritical: boolean;
+  enteredByUserId?: string;
+  enteredByUserName?: string;
+  enteredByUserRole?: string;
+  notedAt: string;
+  signature?: string;
+  attachedFilePath?: string;
+  isConfidential: boolean;
+  acknowledgedByDoctorId?: string;
+  acknowledgedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdmissionDetailsResponse {
+  id: string;
+  patientId: number;
+  admissionNumber: string;
+  department: string;
+  assignedDoctorId: string;
+  assignedDoctorName: string;
+  admissionDate: string;
+  admissionType: string;
+  reasonForAdmission: string;
+  primaryDiagnosis: string;
+  secondaryDiagnosis?: string;
+  roomNumber?: string;
+  bedNumber?: string;
+  roomType?: string;
+  roomCharges?: number;
+  dischargeDate?: string;
+  dischargeStatus?: string;
+  dischargeNotes?: string;
+  followUpInstructions?: string;
+  referredFrom?: string;
+  referredTo?: string;
+  specialRequirements?: string;
+  requiresICU: boolean;
+  isEmergency: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PatientSummary {
@@ -172,9 +378,75 @@ export interface PatientServiceType {
   createPatient(data: CreatePatientPayload): Promise<PatientResponse>;
   getPatients(params?: PatientListParams): Promise<PagedPatientResult>;
   getPatientById(id: number): Promise<PatientResponse>;
+  getPatientDetailsById(id: number): Promise<PatientResponse>;
+  getMedicalHistory(id: number): Promise<MedicalHistoryResponse | null>;
+  getVitalSigns(id: number, limit?: number): Promise<VitalSignsResponse[]>;
+  getMedications(id: number, isActive?: boolean): Promise<MedicationMedicalResponse[]>;
+  getLabReports(id: number, status?: string): Promise<LabReportMedicalResponse[]>;
+  getProgressNotes(id: number, limit?: number): Promise<ProgressNoteMedicalResponse[]>;
+  getCurrentAdmission(id: number): Promise<AdmissionDetailsResponse | null>;
+  getAdmissionHistory(id: number): Promise<AdmissionDetailsResponse[]>;
   updatePatient(id: number, data: CreatePatientPayload): Promise<PatientResponse>;
   searchPatients(query: string, limit?: number): Promise<PatientSummary[]>;
 }
+
+const mapBilling = (apiData: unknown): BillingResponse => {
+  const source = (apiData ?? {}) as Record<string, unknown>;
+  return {
+    id: String(source.id ?? source.Id ?? ''),
+    billNumber: String(source.billNumber ?? source.BillNumber ?? ''),
+    patientId: Number(source.patientId ?? source.PatientId ?? 0),
+    patientName: String(source.patientName ?? source.PatientName ?? ''),
+    patientUhid: String(source.patientUhid ?? source.PatientUhid ?? ''),
+    appointmentId: source.appointmentId ? String(source.appointmentId) : null,
+    visitType: String(source.visitType ?? source.VisitType ?? ''),
+    doctorId: String(source.doctorId ?? source.DoctorId ?? ''),
+    doctorName: String(source.doctorName ?? source.DoctorName ?? ''),
+    date: String(source.date ?? source.Date ?? ''),
+    subtotal: Number(source.subtotal ?? source.Subtotal ?? 0),
+    discount: Number(source.discount ?? source.Discount ?? 0),
+    tax: Number(source.tax ?? source.Tax ?? 0),
+    netAmount: Number(source.netAmount ?? source.NetAmount ?? 0),
+    paidAmount: Number(source.paidAmount ?? source.PaidAmount ?? 0),
+    balanceAmount: Number(source.balanceAmount ?? source.BalanceAmount ?? 0),
+    status: String(source.status ?? source.Status ?? ''),
+    paymentMode: String(source.paymentMode ?? source.PaymentMode ?? ''),
+    transactionId: source.transactionId ? String(source.transactionId) : null,
+    createdAt: String(source.createdAt ?? source.CreatedAt ?? ''),
+  };
+};
+
+const mapPatientDetails = (apiData: unknown): PatientResponse => {
+  const source = (apiData ?? {}) as Record<string, unknown>;
+  const base = mapPatient(apiData) as PatientResponse;
+
+  const previousAppointments = Array.isArray(source.previousAppointments)
+    ? source.previousAppointments.map((item) => mapAppointment(item) as AppointmentResponse)
+    : Array.isArray(source.PreviousAppointments)
+      ? (source.PreviousAppointments as unknown[]).map((item) => mapAppointment(item) as AppointmentResponse)
+      : [];
+
+  const currentAppointmentRaw = source.currentAppointment ?? source.CurrentAppointment;
+  const currentAppointment = currentAppointmentRaw
+    ? (mapAppointment(currentAppointmentRaw) as AppointmentResponse)
+    : null;
+
+  const mapBillingList = (camelKey: string, pascalKey: string): BillingResponse[] => {
+    const value = source[camelKey] ?? source[pascalKey];
+    return Array.isArray(value) ? value.map((item) => mapBilling(item)) : [];
+  };
+
+  return {
+    ...base,
+    previousAppointments,
+    currentAppointment,
+    opdBillings: mapBillingList('opdBillings', 'OpdBillings'),
+    ecgBillings: mapBillingList('ecgBillings', 'EcgBillings'),
+    xrayBillings: mapBillingList('xrayBillings', 'XrayBillings'),
+    labBillings: mapBillingList('labBillings', 'LabBillings'),
+    ipBillings: mapBillingList('ipBillings', 'IpBillings'),
+  };
+};
 
 const toNumber = (value: unknown, fallback: number): number => {
   const parsed = Number(value);
@@ -266,6 +538,126 @@ const patientService: PatientServiceType = {
       const message = handleApiError(error, {
         fallbackMessage: 'Failed to fetch patient',
         toastId: 'patient:detail:error',
+      });
+      throw new Error(message);
+    }
+  },
+
+  async getPatientDetailsById(id: number): Promise<PatientResponse> {
+    try {
+      const response = await apiClient.get<ApiResponse<PatientResponse>>(`/api/patients/${id}/details`);
+      debugApiResponse('patients.details', response.data);
+      return mapPatientDetails(response.data?.data);
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch patient details',
+        toastId: 'patient:details:error',
+      });
+      throw new Error(message);
+    }
+  },
+
+  async getMedicalHistory(id: number): Promise<MedicalHistoryResponse | null> {
+    try {
+      const response = await apiClient.get<ApiResponse<MedicalHistoryResponse | null>>(`/api/patients/${id}/medical-history`);
+      debugApiResponse('patients.medicalHistory', response.data);
+      return response.data?.data ?? null;
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch medical history',
+        toastId: 'patient:medical-history:error',
+      });
+      throw new Error(message);
+    }
+  },
+
+  async getVitalSigns(id: number, limit = 50): Promise<VitalSignsResponse[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<VitalSignsResponse[]>>(`/api/patients/${id}/vitals`, {
+        params: { limit },
+      });
+      debugApiResponse('patients.vitals', response.data);
+      return Array.isArray(response.data?.data) ? response.data.data : [];
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch vital signs',
+        toastId: 'patient:vitals:error',
+      });
+      throw new Error(message);
+    }
+  },
+
+  async getMedications(id: number, isActive?: boolean): Promise<MedicationMedicalResponse[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<MedicationMedicalResponse[]>>(`/api/patients/${id}/medications`, {
+        params: isActive === undefined ? undefined : { isActive },
+      });
+      debugApiResponse('patients.medications', response.data);
+      return Array.isArray(response.data?.data) ? response.data.data : [];
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch medications',
+        toastId: 'patient:medications:error',
+      });
+      throw new Error(message);
+    }
+  },
+
+  async getLabReports(id: number, status?: string): Promise<LabReportMedicalResponse[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<LabReportMedicalResponse[]>>(`/api/patients/${id}/lab-reports`, {
+        params: status ? { status } : undefined,
+      });
+      debugApiResponse('patients.labReports', response.data);
+      return Array.isArray(response.data?.data) ? response.data.data : [];
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch lab reports',
+        toastId: 'patient:lab-reports:error',
+      });
+      throw new Error(message);
+    }
+  },
+
+  async getProgressNotes(id: number, limit = 100): Promise<ProgressNoteMedicalResponse[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<ProgressNoteMedicalResponse[]>>(`/api/patients/${id}/progress-notes`, {
+        params: { limit },
+      });
+      debugApiResponse('patients.progressNotes', response.data);
+      return Array.isArray(response.data?.data) ? response.data.data : [];
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch progress notes',
+        toastId: 'patient:progress-notes:error',
+      });
+      throw new Error(message);
+    }
+  },
+
+  async getCurrentAdmission(id: number): Promise<AdmissionDetailsResponse | null> {
+    try {
+      const response = await apiClient.get<ApiResponse<AdmissionDetailsResponse | null>>(`/api/patients/${id}/admissions/current`);
+      debugApiResponse('patients.currentAdmission', response.data);
+      return response.data?.data ?? null;
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch current admission',
+        toastId: 'patient:current-admission:error',
+      });
+      throw new Error(message);
+    }
+  },
+
+  async getAdmissionHistory(id: number): Promise<AdmissionDetailsResponse[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<AdmissionDetailsResponse[]>>(`/api/patients/${id}/admissions/history`);
+      debugApiResponse('patients.admissionHistory', response.data);
+      return Array.isArray(response.data?.data) ? response.data.data : [];
+    } catch (error) {
+      const message = handleApiError(error, {
+        fallbackMessage: 'Failed to fetch admission history',
+        toastId: 'patient:admission-history:error',
       });
       throw new Error(message);
     }

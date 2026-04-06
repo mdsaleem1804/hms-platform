@@ -32,6 +32,14 @@ public class PatientRepository : IPatientRepository
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
+    public async Task<Patient?> GetByIdWithDetailsAsync(long id)
+    {
+        return await _dbContext.Patients
+            .Include(p => p.Appointments)
+            .Include(p => p.Billings)
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
+
     public async Task<List<Patient>> GetAllAsync()
     {
         return await _dbContext.Patients
@@ -137,5 +145,91 @@ public class PatientRepository : IPatientRepository
         _dbContext.Patients.Remove(patient);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<MedicalHistory?> GetMedicalHistoryByPatientIdAsync(long patientId)
+    {
+        return await _dbContext.MedicalHistories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.PatientId == patientId);
+    }
+
+    public async Task<List<VitalSigns>> GetVitalSignsByPatientIdAsync(long patientId, int limit = 50)
+    {
+        limit = Math.Clamp(limit, 1, 200);
+
+        return await _dbContext.VitalSigns
+            .AsNoTracking()
+            .Where(v => v.PatientId == patientId)
+            .OrderByDescending(v => v.RecordedAt)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    public async Task<List<Medication>> GetMedicationsByPatientIdAsync(long patientId, bool? isActive = null)
+    {
+        var query = _dbContext.Medications
+            .AsNoTracking()
+            .Include(m => m.PrescribedByDoctor)
+            .Where(m => m.PatientId == patientId);
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(m => m.IsActive == isActive.Value);
+        }
+
+        return await query
+            .OrderByDescending(m => m.StartDate)
+            .ToListAsync();
+    }
+
+    public async Task<List<LabReport>> GetLabReportsByPatientIdAsync(long patientId, string? status = null)
+    {
+        var query = _dbContext.LabReports
+            .AsNoTracking()
+            .Include(r => r.OrderedByDoctor)
+            .Where(r => r.PatientId == patientId);
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            var statusValue = status.Trim();
+            query = query.Where(r => EF.Functions.ILike(r.Status, statusValue));
+        }
+
+        return await query
+            .OrderByDescending(r => r.TestDate)
+            .ToListAsync();
+    }
+
+    public async Task<List<ProgressNote>> GetProgressNotesByPatientIdAsync(long patientId, int limit = 100)
+    {
+        limit = Math.Clamp(limit, 1, 500);
+
+        return await _dbContext.ProgressNotes
+            .AsNoTracking()
+            .Where(p => p.PatientId == patientId)
+            .OrderByDescending(p => p.NotedAt)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    public async Task<AdmissionDetails?> GetCurrentAdmissionByPatientIdAsync(long patientId)
+    {
+        return await _dbContext.AdmissionDetails
+            .AsNoTracking()
+            .Include(a => a.AssignedDoctor)
+            .Where(a => a.PatientId == patientId)
+            .OrderByDescending(a => a.AdmissionDate)
+            .FirstOrDefaultAsync(a => a.DischargeDate == null);
+    }
+
+    public async Task<List<AdmissionDetails>> GetAdmissionHistoryByPatientIdAsync(long patientId)
+    {
+        return await _dbContext.AdmissionDetails
+            .AsNoTracking()
+            .Include(a => a.AssignedDoctor)
+            .Where(a => a.PatientId == patientId)
+            .OrderByDescending(a => a.AdmissionDate)
+            .ToListAsync();
     }
 }

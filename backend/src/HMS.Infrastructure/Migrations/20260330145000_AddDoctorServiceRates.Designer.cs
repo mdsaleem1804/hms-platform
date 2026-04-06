@@ -64,10 +64,7 @@ namespace HMS.Infrastructure.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
+                    b.Property<bool>("IsDeleted").HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
                     b.Property<decimal>("Rate")
@@ -127,3 +124,4 @@ namespace HMS.Infrastructure.Migrations
         }
     }
 }
+

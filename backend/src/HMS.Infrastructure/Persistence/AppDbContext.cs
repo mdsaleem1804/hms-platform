@@ -23,6 +23,12 @@ public class AppDbContext : DbContext
     public DbSet<RevenueRate> RevenueRates { get; set; }
     public DbSet<DoctorServiceRate> DoctorServiceRates { get; set; }
     public DbSet<HospitalSettings> HospitalSettings { get; set; }
+    public DbSet<MedicalHistory> MedicalHistories { get; set; }
+    public DbSet<AdmissionDetails> AdmissionDetails { get; set; }
+    public DbSet<VitalSigns> VitalSigns { get; set; }
+    public DbSet<Medication> Medications { get; set; }
+    public DbSet<LabReport> LabReports { get; set; }
+    public DbSet<ProgressNote> ProgressNotes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -526,7 +532,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(b => b.Date);
 
             entity.HasOne(b => b.Patient)
-                .WithMany()
+                .WithMany(p => p.Billings)
                 .HasForeignKey(b => b.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -788,6 +794,580 @@ public class AppDbContext : DbContext
             entity.HasIndex(dsr => dsr.ServiceName);
             entity.HasIndex(dsr => new { dsr.DoctorId, dsr.ServiceName });
             entity.HasIndex(dsr => dsr.IsActive);
+        });
+
+        // Medical History Configuration
+        modelBuilder.Entity<MedicalHistory>(entity =>
+        {
+            entity.ToTable("medical_histories");
+            entity.HasKey(m => m.Id);
+
+            entity.Property(m => m.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(m => m.PatientId)
+                .HasColumnName("patient_id")
+                .IsRequired();
+
+            entity.Property(m => m.KnownAllergies)
+                .HasColumnName("known_allergies");
+
+            entity.Property(m => m.HasDrugAllergy)
+                .HasColumnName("has_drug_allergy");
+
+            entity.Property(m => m.HasFoodAllergy)
+                .HasColumnName("has_food_allergy");
+
+            entity.Property(m => m.AllergySeverity)
+                .HasColumnName("allergy_severity")
+                .HasMaxLength(20);
+
+            entity.Property(m => m.ChronicConditions)
+                .HasColumnName("chronic_conditions");
+
+            entity.Property(m => m.IsDiabetic)
+                .HasColumnName("is_diabetic");
+
+            entity.Property(m => m.IsHypertensive)
+                .HasColumnName("is_hypertensive");
+
+            entity.Property(m => m.HasHeartDisease)
+                .HasColumnName("has_heart_disease");
+
+            entity.Property(m => m.HasAsthma)
+                .HasColumnName("has_asthma");
+
+            entity.Property(m => m.HasKidneyDisease)
+                .HasColumnName("has_kidney_disease");
+
+            entity.Property(m => m.HasThyroidDisease)
+                .HasColumnName("has_thyroid_disease");
+
+            entity.Property(m => m.SurgeryDetails)
+                .HasColumnName("surgery_details");
+
+            entity.Property(m => m.FamilyHistoryOfDiabetes)
+                .HasColumnName("family_history_diabetes")
+                .HasMaxLength(50);
+
+            entity.Property(m => m.FamilyHistoryOfHeartDisease)
+                .HasColumnName("family_history_heart_disease")
+                .HasMaxLength(50);
+
+            entity.Property(m => m.FamilyHistoryOfCancer)
+                .HasColumnName("family_history_cancer")
+                .HasMaxLength(50);
+
+            entity.Property(m => m.OtherFamilyHistory)
+                .HasColumnName("other_family_history");
+
+            entity.Property(m => m.PreviousSurgeries)
+                .HasColumnName("previous_surgeries");
+
+            entity.Property(m => m.Vaccinations)
+                .HasColumnName("vaccinations");
+
+            entity.Property(m => m.ExerciseFrequency)
+                .HasColumnName("exercise_frequency")
+                .HasMaxLength(20);
+
+            entity.Property(m => m.IsSmoker)
+                .HasColumnName("is_smoker");
+
+            entity.Property(m => m.UsesAlcohol)
+                .HasColumnName("uses_alcohol");
+
+            entity.Property(m => m.PastMedications)
+                .HasColumnName("past_medications");
+
+            entity.Property(m => m.CurrentMedications)
+                .HasColumnName("current_medications");
+
+            entity.Property(m => m.AdditionalNotes)
+                .HasColumnName("additional_notes");
+
+            entity.Property(m => m.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(m => m.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(m => m.IsDeleted)
+                .HasColumnName("is_deleted");
+
+            entity.HasOne(m => m.Patient)
+                .WithOne(p => p.MedicalHistory)
+                .HasForeignKey<MedicalHistory>(m => m.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(m => m.PatientId).IsUnique();
+        });
+
+        // Admission Details Configuration
+        modelBuilder.Entity<AdmissionDetails>(entity =>
+        {
+            entity.ToTable("admission_details");
+            entity.HasKey(a => a.Id);
+
+            entity.Property(a => a.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(a => a.PatientId)
+                .HasColumnName("patient_id")
+                .IsRequired();
+
+            entity.Property(a => a.AdmissionNumber)
+                .HasColumnName("admission_number")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(a => a.Department)
+                .HasColumnName("department")
+                .HasMaxLength(100);
+
+            entity.Property(a => a.AssignedDoctorId)
+                .HasColumnName("assigned_doctor_id")
+                .HasMaxLength(50);
+
+            entity.Property(a => a.AdmissionDate)
+                .HasColumnName("admission_date");
+
+            entity.Property(a => a.AdmissionType)
+                .HasColumnName("admission_type")
+                .HasMaxLength(20);
+
+            entity.Property(a => a.ReasonForAdmission)
+                .HasColumnName("reason_for_admission");
+
+            entity.Property(a => a.PrimaryDiagnosis)
+                .HasColumnName("primary_diagnosis");
+
+            entity.Property(a => a.SecondaryDiagnosis)
+                .HasColumnName("secondary_diagnosis");
+
+            entity.Property(a => a.RoomNumber)
+                .HasColumnName("room_number")
+                .HasMaxLength(20);
+
+            entity.Property(a => a.BedNumber)
+                .HasColumnName("bed_number")
+                .HasMaxLength(20);
+
+            entity.Property(a => a.RoomType)
+                .HasColumnName("room_type")
+                .HasMaxLength(20);
+
+            entity.Property(a => a.RoomCharges)
+                .HasColumnName("room_charges")
+                .HasColumnType("numeric(12,2)");
+
+            entity.Property(a => a.DischargeDate)
+                .HasColumnName("discharge_date");
+
+            entity.Property(a => a.DischargeStatus)
+                .HasColumnName("discharge_status")
+                .HasMaxLength(20);
+
+            entity.Property(a => a.DischargeNotes)
+                .HasColumnName("discharge_notes");
+
+            entity.Property(a => a.FollowUpInstructions)
+                .HasColumnName("follow_up_instructions");
+
+            entity.Property(a => a.ReferredFrom)
+                .HasColumnName("referred_from")
+                .HasMaxLength(100);
+
+            entity.Property(a => a.ReferredTo)
+                .HasColumnName("referred_to")
+                .HasMaxLength(100);
+
+            entity.Property(a => a.SpecialRequirements)
+                .HasColumnName("special_requirements");
+
+            entity.Property(a => a.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(a => a.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(a => a.IsDeleted)
+                .HasColumnName("is_deleted");
+
+            entity.Property(a => a.CreatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(a => a.Patient)
+                .WithMany(p => p.AdmissionHistory)
+                .HasForeignKey(a => a.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(a => a.AssignedDoctor)
+                .WithMany()
+                .HasForeignKey(a => a.AssignedDoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(a => a.PatientId);
+            entity.HasIndex(a => a.AdmissionNumber).IsUnique();
+            entity.HasIndex(a => a.DischargeStatus);
+        });
+
+        // Vital Signs Configuration
+        modelBuilder.Entity<VitalSigns>(entity =>
+        {
+            entity.ToTable("vital_signs");
+            entity.HasKey(v => v.Id);
+
+            entity.Property(v => v.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(v => v.PatientId)
+                .HasColumnName("patient_id")
+                .IsRequired();
+
+            entity.Property(v => v.RecordedByUserId)
+                .HasColumnName("recorded_by_user_id")
+                .HasMaxLength(50);
+
+            entity.Property(v => v.Temperature)
+                .HasColumnName("temperature")
+                .HasColumnType("numeric(5,2)");
+
+            entity.Property(v => v.SystolicBP)
+                .HasColumnName("systolic_bp");
+
+            entity.Property(v => v.DiastolicBP)
+                .HasColumnName("diastolic_bp");
+
+            entity.Property(v => v.PulseRate)
+                .HasColumnName("pulse_rate");
+
+            entity.Property(v => v.RespiratoryRate)
+                .HasColumnName("respiratory_rate");
+
+            entity.Property(v => v.OxygenSaturation)
+                .HasColumnName("oxygen_saturation")
+                .HasColumnType("numeric(5,2)");
+
+            entity.Property(v => v.Weight)
+                .HasColumnName("weight")
+                .HasColumnType("numeric(8,2)");
+
+            entity.Property(v => v.Height)
+                .HasColumnName("height")
+                .HasColumnType("numeric(8,2)");
+
+            entity.Property(v => v.BMI)
+                .HasColumnName("bmi")
+                .HasColumnType("numeric(8,2)");
+
+            entity.Property(v => v.Notes)
+                .HasColumnName("notes");
+
+            entity.Property(v => v.RecordedAt)
+                .HasColumnName("recorded_at");
+
+            entity.Property(v => v.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+            entity.Property(v => v.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(v => v.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(v => v.Patient)
+                .WithMany(p => p.VitalSigns)
+                .HasForeignKey(v => v.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(v => v.PatientId);
+            entity.HasIndex(v => v.RecordedAt);
+        });
+
+        // Medication Configuration
+        modelBuilder.Entity<Medication>(entity =>
+        {
+            entity.ToTable("medications");
+            entity.HasKey(m => m.Id);
+
+            entity.Property(m => m.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(m => m.PatientId)
+                .HasColumnName("patient_id")
+                .IsRequired();
+
+            entity.Property(m => m.MedicationName)
+                .HasColumnName("medication_name")
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(m => m.Dosage)
+                .HasColumnName("dosage")
+                .HasMaxLength(50);
+
+            entity.Property(m => m.Frequency)
+                .HasColumnName("frequency")
+                .HasMaxLength(100);
+
+            entity.Property(m => m.Route)
+                .HasColumnName("route")
+                .HasMaxLength(50);
+
+            entity.Property(m => m.Reason)
+                .HasColumnName("reason");
+
+            entity.Property(m => m.PrescribedByDoctorId)
+                .HasColumnName("prescribed_by_doctor_id")
+                .HasMaxLength(50);
+
+            entity.Property(m => m.StartDate)
+                .HasColumnName("start_date");
+
+            entity.Property(m => m.EndDate)
+                .HasColumnName("end_date");
+
+            entity.Property(m => m.IsActive)
+                .HasColumnName("is_active")
+                .HasDefaultValue(true);
+
+            entity.Property(m => m.SideEffects)
+                .HasColumnName("side_effects");
+
+            entity.Property(m => m.Contraindications)
+                .HasColumnName("contraindications");
+
+            entity.Property(m => m.Notes)
+                .HasColumnName("notes");
+
+            entity.Property(m => m.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(m => m.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(m => m.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
+            entity.Property(m => m.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(m => m.Patient)
+                .WithMany(p => p.Medications)
+                .HasForeignKey(m => m.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.PrescribedByDoctor)
+                .WithMany()
+                .HasForeignKey(m => m.PrescribedByDoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(m => m.PatientId);
+            entity.HasIndex(m => m.IsActive);
+            entity.HasIndex(m => m.StartDate);
+        });
+
+        // Lab Report Configuration
+        modelBuilder.Entity<LabReport>(entity =>
+        {
+            entity.ToTable("lab_reports");
+            entity.HasKey(l => l.Id);
+
+            entity.Property(l => l.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(l => l.PatientId)
+                .HasColumnName("patient_id")
+                .IsRequired();
+
+            entity.Property(l => l.ReportNumber)
+                .HasColumnName("report_number")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(l => l.TestName)
+                .HasColumnName("test_name")
+                .HasMaxLength(200);
+
+            entity.Property(l => l.TestCategory)
+                .HasColumnName("test_category")
+                .HasMaxLength(50);
+
+            entity.Property(l => l.OrderedByDoctorId)
+                .HasColumnName("ordered_by_doctor_id")
+                .HasMaxLength(50);
+
+            entity.Property(l => l.TestDate)
+                .HasColumnName("test_date");
+
+            entity.Property(l => l.ResultDate)
+                .HasColumnName("result_date");
+
+            entity.Property(l => l.Status)
+                .HasColumnName("status")
+                .HasMaxLength(20);
+
+            entity.Property(l => l.TestResult)
+                .HasColumnName("test_result");
+
+            entity.Property(l => l.ReferenceRange)
+                .HasColumnName("reference_range");
+
+            entity.Property(l => l.NormalValue)
+                .HasColumnName("normal_value");
+
+            entity.Property(l => l.ObservedValue)
+                .HasColumnName("observed_value");
+
+            entity.Property(l => l.IsAbnormal)
+                .HasColumnName("is_abnormal")
+                .HasDefaultValue(false);
+
+            entity.Property(l => l.LabName)
+                .HasColumnName("lab_name")
+                .HasMaxLength(150);
+
+            entity.Property(l => l.TechnicianName)
+                .HasColumnName("technician_name")
+                .HasMaxLength(100);
+
+            entity.Property(l => l.PathologistName)
+                .HasColumnName("pathologist_name");
+
+            entity.Property(l => l.Notes)
+                .HasColumnName("notes");
+
+            entity.Property(l => l.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(l => l.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(l => l.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(l => l.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(l => l.Patient)
+                .WithMany(p => p.LabReports)
+                .HasForeignKey(l => l.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(l => l.OrderedByDoctor)
+                .WithMany()
+                .HasForeignKey(l => l.OrderedByDoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(l => l.PatientId);
+            entity.HasIndex(l => l.ReportNumber).IsUnique();
+            entity.HasIndex(l => l.TestDate);
+            entity.HasIndex(l => l.Status);
+        });
+
+        // Progress Note Configuration
+        modelBuilder.Entity<ProgressNote>(entity =>
+        {
+            entity.ToTable("progress_notes");
+            entity.HasKey(p => p.Id);
+
+            entity.Property(p => p.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(p => p.PatientId)
+                .HasColumnName("patient_id")
+                .IsRequired();
+
+            entity.Property(p => p.EnteredByUserId)
+                .HasColumnName("entered_by_user_id")
+                .HasMaxLength(50);
+
+            entity.Property(p => p.EnteredByUserRole)
+                .HasColumnName("entered_by_user_role")
+                .HasMaxLength(50);
+
+            entity.Property(p => p.Title)
+                .HasColumnName("title")
+                .HasMaxLength(200);
+
+            entity.Property(p => p.NoteType)
+                .HasColumnName("note_type")
+                .HasMaxLength(50)
+                .HasDefaultValue("General");
+
+            entity.Property(p => p.NoteContent)
+                .HasColumnName("note_content");
+
+            entity.Property(p => p.Diagnosis)
+                .HasColumnName("diagnosis");
+
+            entity.Property(p => p.TreatmentPlan)
+                .HasColumnName("treatment_plan");
+
+            entity.Property(p => p.Observations)
+                .HasColumnName("observations");
+
+            entity.Property(p => p.Recommendations);
+
+            entity.Property(p => p.IsCritical)
+                .HasColumnName("is_critical")
+                .HasDefaultValue(false);
+
+            entity.Property(p => p.NotedAt)
+                .HasColumnName("noted_at");
+
+            entity.Property(p => p.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(p => p.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(p => p.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false)
+                .HasColumnName("noted_at");
+
+            entity.Property(p => p.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.Property(p => p.UpdatedAt)
+                .HasColumnName("updated_at")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(p => p.Patient)
+                .WithMany(pat => pat.ProgressNotes)
+                .HasForeignKey(p => p.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(p => p.PatientId);
+            entity.HasIndex(p => p.NotedAt);
+            entity.HasIndex(p => p.IsCritical);
         });
     }
 }

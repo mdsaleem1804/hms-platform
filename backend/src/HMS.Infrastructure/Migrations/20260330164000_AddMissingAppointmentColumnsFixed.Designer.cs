@@ -30,3 +30,4 @@ namespace HMS.Infrastructure.Migrations
         }
     }
 }
+

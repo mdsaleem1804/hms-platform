@@ -110,3 +110,4 @@ namespace HMS.Infrastructure.Migrations
         }
     }
 }
+

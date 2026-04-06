@@ -136,6 +136,96 @@ public class PatientsController : ControllerBase
     }
 
     /// <summary>
+    /// Get patient details by ID, including appointments and billing details
+    /// </summary>
+    /// <param name="id">Patient ID</param>
+    /// <returns>200 OK with patient details</returns>
+    [HttpGet("{id}/details")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<PatientDetailsDto>>> GetPatientDetailsById(long id)
+    {
+        var patientDetails = await _patientService.GetPatientDetailsByIdAsync(id);
+        if (patientDetails == null)
+        {
+            return NotFound(ApiResponse<PatientDetailsDto>.FailureResponse("Patient not found"));
+        }
+
+        return Ok(ApiResponse<PatientDetailsDto>.SuccessResponse(patientDetails, "Patient details retrieved successfully"));
+    }
+
+    [HttpGet("{id}/medical-history")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<MedicalHistoryDto?>>> GetMedicalHistory(long id)
+    {
+        var medicalHistory = await _patientService.GetMedicalHistoryAsync(id);
+        return Ok(ApiResponse<MedicalHistoryDto?>.SuccessResponse(medicalHistory, "Medical history retrieved successfully"));
+    }
+
+    [HttpGet("{id}/vitals")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<VitalSignsDto>>>> GetVitalSigns(long id, [FromQuery] int limit = 50)
+    {
+        var vitals = await _patientService.GetVitalSignsAsync(id, limit);
+        return Ok(ApiResponse<List<VitalSignsDto>>.SuccessResponse(vitals, "Vital signs retrieved successfully"));
+    }
+
+    [HttpGet("{id}/medications")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<MedicationDto>>>> GetMedications(long id, [FromQuery] bool? isActive = null)
+    {
+        var medications = await _patientService.GetMedicationsAsync(id, isActive);
+        return Ok(ApiResponse<List<MedicationDto>>.SuccessResponse(medications, "Medications retrieved successfully"));
+    }
+
+    [HttpGet("{id}/lab-reports")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<LabReportDto>>>> GetLabReports(long id, [FromQuery] string? status = null)
+    {
+        var reports = await _patientService.GetLabReportsAsync(id, status);
+        return Ok(ApiResponse<List<LabReportDto>>.SuccessResponse(reports, "Lab reports retrieved successfully"));
+    }
+
+    [HttpGet("{id}/progress-notes")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<ProgressNoteDto>>>> GetProgressNotes(long id, [FromQuery] int limit = 100)
+    {
+        var notes = await _patientService.GetProgressNotesAsync(id, limit);
+        return Ok(ApiResponse<List<ProgressNoteDto>>.SuccessResponse(notes, "Progress notes retrieved successfully"));
+    }
+
+    [HttpGet("{id}/admissions/current")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<AdmissionDetailsDto?>>> GetCurrentAdmission(long id)
+    {
+        var admission = await _patientService.GetCurrentAdmissionAsync(id);
+        return Ok(ApiResponse<AdmissionDetailsDto?>.SuccessResponse(admission, "Current admission retrieved successfully"));
+    }
+
+    [HttpGet("{id}/admissions/history")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<AdmissionDetailsDto>>>> GetAdmissionHistory(long id)
+    {
+        var admissions = await _patientService.GetAdmissionHistoryAsync(id);
+        return Ok(ApiResponse<List<AdmissionDetailsDto>>.SuccessResponse(admissions, "Admission history retrieved successfully"));
+    }
+
+    /// <summary>
     /// Update a patient
     /// </summary>
     /// <param name="id">Patient ID</param>
