@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using HMS.Infrastructure.Persistence;
+using HMS.IntegrationTests.Fixtures;
+using HMS.IntegrationTests.TestData;
 using Xunit;
 
 namespace HMS.IntegrationTests.Tests;

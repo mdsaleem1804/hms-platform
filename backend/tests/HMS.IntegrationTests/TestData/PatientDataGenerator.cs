@@ -13,6 +13,7 @@ public class PatientDataGenerator
     private static readonly string[] _idProofTypes = new[] { "Aadhar", "PAN", "Passport", "DL", "VoterId" };
 
     private static int _uhidCounter = 10001;
+    private static long _mobileCounter = 9000000000;
     private static readonly object _lockObject = new object();
 
     private static readonly Faker<Patient> _patientFaker = new Faker<Patient>()
@@ -29,10 +30,10 @@ public class PatientDataGenerator
         .RuleFor(p => p.Dob, f => f.Person.DateOfBirth.ToUniversalTime())
         .RuleFor(p => p.Gender, f => f.PickRandom(_genders))
         .RuleFor(p => p.BloodGroup, f => f.PickRandom(_bloodGroups))
-        .RuleFor(p => p.Mobile, f => f.Person.Phone.Replace("-", "").Substring(0, 10))
+        .RuleFor(p => p.Mobile, f => GenerateMobileNumber())
         .RuleFor(p => p.Email, f => f.Person.Email)
         .RuleFor(p => p.Address, f => f.Address.FullAddress())
-        .RuleFor(p => p.PostalCode, f => f.Address.ZipCode().Substring(0, 10))
+        .RuleFor(p => p.PostalCode, f => Truncate(f.Address.ZipCode(), 10))
         .RuleFor(p => p.Photo, f => (string?)null)
         .RuleFor(p => p.IdProofType, f => f.PickRandom(_idProofTypes))
         .RuleFor(p => p.IdProofNumber, f => f.Random.AlphaNumeric(12).ToUpper())
@@ -44,11 +45,25 @@ public class PatientDataGenerator
 
     public static List<Patient> GeneratePatients(int count = 25) => _patientFaker.Generate(count);
 
+    private static string GenerateMobileNumber()
+    {
+        lock (_lockObject)
+        {
+            return (_mobileCounter++).ToString();
+        }
+    }
+
+    private static string Truncate(string value, int maxLength)
+    {
+        return value.Length <= maxLength ? value : value[..maxLength];
+    }
+
     public static void ResetUhidCounter(int startFrom = 10001)
     {
         lock (_lockObject)
         {
             _uhidCounter = startFrom;
+            _mobileCounter = 9000000000;
         }
     }
 }

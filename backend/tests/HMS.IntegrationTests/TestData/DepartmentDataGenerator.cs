@@ -32,7 +32,20 @@ public class DepartmentDataGenerator
         "Oncology"
     };
 
-    public static Department GenerateDepartment() => _departmentFaker.Generate();
+    public static Department GenerateDepartment() => GenerateDepartments(1)[0];
 
-    public static List<Department> GenerateDepartments(int count = 10) => _departmentFaker.Generate(count);
+    public static List<Department> GenerateDepartments(int count = 10)
+    {
+        var specializations = GetSpecializations();
+        return specializations
+            .OrderBy(_ => Guid.NewGuid())
+            .Take(Math.Min(count, specializations.Count))
+            .Select(name =>
+            {
+                var department = _departmentFaker.Generate();
+                department.Name = name;
+                return department;
+            })
+            .ToList();
+    }
 }

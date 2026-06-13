@@ -28,10 +28,13 @@ public class AppointmentIntegrationTests : IntegrationTestBase
         {
             patientId = patient.Id,
             doctorId = doctor.Id,
+            departmentId = doctor.DepartmentId,
             appointmentDate = DateTime.UtcNow.AddDays(5),
-            startTime = new TimeSpan(10, 0, 0),
-            endTime = new TimeSpan(11, 0, 0),
+            startTime = "10:00",
+            endTime = "11:00",
             visitType = "OPD",
+            status = "Scheduled",
+            priority = "Normal",
             notes = "Regular checkup"
         };
 
@@ -89,9 +92,9 @@ public class AppointmentIntegrationTests : IntegrationTestBase
             a.AppointmentDate >= now.AddDays(-5) && a.AppointmentDate <= now.AddDays(5)).ToList();
         var futureAppointments = appointments.Where(a => a.AppointmentDate > now).ToList();
 
-        Assert.NotEmpty(pastAppointments, "Should have past appointments");
-        Assert.NotEmpty(currentAppointments, "Should have current appointments");
-        Assert.NotEmpty(futureAppointments, "Should have future appointments");
+        Assert.True(pastAppointments.Any(), "Should have past appointments");
+        Assert.True(currentAppointments.Any(), "Should have current appointments");
+        Assert.True(futureAppointments.Any(), "Should have future appointments");
 
         Console.WriteLine($"Appointment date distribution:");
         Console.WriteLine($"  Past:     {pastAppointments.Count}");

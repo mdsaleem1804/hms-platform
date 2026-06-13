@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using HMS.Infrastructure.Persistence;
+using HMS.IntegrationTests.TestData;
 using Serilog;
 
 namespace HMS.IntegrationTests.Fixtures;
